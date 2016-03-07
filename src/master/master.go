@@ -7,7 +7,7 @@ import (
   "net"
   "net/rpc"
   _ "github.com/go-sql-driver/mysql"
-  "github.com/garyburd/redigo/redis"
+  _ "github.com/garyburd/redigo/redis"
 )
 
 type Master struct{
@@ -19,11 +19,11 @@ type Master struct{
 }
 "root:1234567890@/test?charset=utf8"
 
-func InitMaster(dbname, dbstring, masterAddress string) *Master {
+func InitMaster(dbname, dbstring, MasterAddress string) *Master {
   m = &Master{}
   m.dbname = dbname
   m.dbstring = dbstring
-  m.MasterAddress = masterAddress
+  m.MasterAddress = MasterAddress
   mr.alive = true
   return m
 }
@@ -31,6 +31,7 @@ func InitMaster(dbname, dbstring, masterAddress string) *Master {
 func Run(dbname, dbstring string) {
   m := InitMaster(dbname, dbstring)
 	l := sync.Mutex
+  m.StartRpcServer()
 
 	get_url_from_mysql := func(m *Master) string {
 		var res = -1
