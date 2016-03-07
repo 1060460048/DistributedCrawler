@@ -4,6 +4,8 @@ import (
   "fmt"
   "database/sql"
   "sync"
+  "net"
+  "net/rpc"
   _ "github.com/go-sql-driver/mysql"
   "github.com/garyburd/redigo/redis"
 )
@@ -11,14 +13,18 @@ import (
 type Master struct{
   dbname string
   dbstring string
-
+  MasterAddress string
+  l               net.Listener
+  alive           bool
 }
 "root:1234567890@/test?charset=utf8"
 
-func InitMaster(dbname, dbstring string) *Master {
+func InitMaster(dbname, dbstring, masterAddress string) *Master {
   m = &Master{}
   m.dbname = dbname
   m.dbstring = dbstring
+  m.MasterAddress = masterAddress
+  mr.alive = true
   return m
 }
 
@@ -53,6 +59,34 @@ func Run(dbname, dbstring string) {
 		l.Lock()
 		defer l.Unlock()
 	}
+
+}
+
+func (m *Master) StartRpcServer() {
+  rpcs := rpc.NewServer()
+  rpcs.Register(m)
+  l, e := net.Listen("unix", m.MasterAddress)
+  if e != nil {
+		log.Fatal("RegstrationServer", mr.MasterAddress, " error: ", e)
+	}
+	mr.l = l
+  // now that we are listening on the master address, can fork off
+	// accepting connections to another thread.
+	go func() {
+		for mr.alive {
+			conn, err := mr.l.Accept()
+			if err == nil {
+				go func() {
+					rpcs.ServeConn(conn)
+					conn.Close()
+				}()
+			} else {
+				log.Fatal("RegistrationServer: accept error", err)
+				break
+			}
+		}
+		log.Fatal("RegistrationServer: done\n")
+	}()
 }
 
 func (m *Master) QueryUrls(sql string) (rows, err){
