@@ -61,3 +61,18 @@ func (w *Worker) StartRpcServer() {
 	wk.l.Close()
 	DPrintf("RunWorker %s exit\n", me)
 }
+
+func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) {
+  switch args.JobType {
+  case AddRedis:
+    DoAddRedis()
+  }
+}
+
+func DoAddRedis(){
+  rs, err := redis.Dial("tcp", "127.0.0.1:6379")
+  defer rs.Close()
+  if err != nil {
+    fmt.Println("Redis connection err: " + err)
+  }
+}

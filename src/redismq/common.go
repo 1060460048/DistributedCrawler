@@ -1,8 +1,16 @@
-package mapreduce
+package redismq
 
 import "fmt"
 import "net/rpc"
 
+type DojobArgs struct {
+	Job string
+	JobType string
+}
+
+type DojobReply struct {
+	OK bool
+}
 
 type RegisterArgs struct {
 	Worker string

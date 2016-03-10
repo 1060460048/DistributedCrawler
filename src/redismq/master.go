@@ -16,6 +16,7 @@ type Master struct{
   MasterAddress string
   l               net.Listener
   alive           bool
+  registerChannel chan string
 }
 "root:1234567890@/test?charset=utf8"
 
@@ -24,7 +25,8 @@ func InitMaster(dbname, dbstring, MasterAddress string) *Master {
   m.dbname = dbname
   m.dbstring = dbstring
   m.MasterAddress = MasterAddress
-  mr.alive = true
+  m.alive = true
+  m.registerChannel = make(chan string)
   return m
 }
 
@@ -33,6 +35,13 @@ func RunMaster(dbname, dbstring string) {
 	l := sync.Mutex
   m.StartRpcServer()
 
+  go func() {
+    for {
+      select {
+        
+      }
+    }
+  }()
 
 	/*get_url_from_mysql := func(m *Master) string {
 		var res = -1
@@ -61,6 +70,13 @@ func RunMaster(dbname, dbstring string) {
 		l.Lock()
 		defer l.Unlock()
 	}*/
+}
+
+func (m *Master) Register(args *RegisterArgs, res *RegisterReply) {
+   fmt.Println("Register worker:%s\n", args.Worker)
+   m.registerChannel <- args.Worker
+   res.Ok = true
+   return nil
 }
 
 func (m *Master) StartRpcServer() {
