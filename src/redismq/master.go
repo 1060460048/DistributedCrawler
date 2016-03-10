@@ -28,12 +28,13 @@ func InitMaster(dbname, dbstring, MasterAddress string) *Master {
   return m
 }
 
-func Run(dbname, dbstring string) {
+func RunMaster(dbname, dbstring string) {
   m := InitMaster(dbname, dbstring)
 	l := sync.Mutex
   m.StartRpcServer()
 
-	get_url_from_mysql := func(m *Master) string {
+
+	/*get_url_from_mysql := func(m *Master) string {
 		var res = -1
 		l.Lock()
 		defer l.Unlock()
@@ -59,8 +60,7 @@ func Run(dbname, dbstring string) {
   get_url_to_redis := func(m *Master) {
 		l.Lock()
 		defer l.Unlock()
-	}
-
+	}*/
 }
 
 func (m *Master) StartRpcServer() {
