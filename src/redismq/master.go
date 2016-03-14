@@ -38,7 +38,7 @@ func RunMaster(dbname, dbstring string) {
   go func() {
     for {
       select {
-        
+
       }
     }
   }()
@@ -106,19 +106,36 @@ func (m *Master) StartRpcServer() {
 	}()
 }
 
-func (m *Master) QueryUrls(sql string) (rows, err){
-  db, err := sql.Open(m.dbname, m.dbstring)
-  defer db.Close()
+func () DispatchUrl() {
+  conn, err := redis.Dial("tcp", "127.0.0.1:6379")
+  defer conn.Close()
   if err != nil {
-    fmt.Println("open mysql err:" + err);
+    fmt.Println("Redis connection err: %s", err)
   }
-  rows, err := db.Query(sql)
-}
 
-func (m *Master) RedisAdd(){
-  rs, err := redis.Dial("tcp", "127.0.0.1:6379")
-  defer rs.Close()
-  if err != nil {
-    fmt.Println("Redis connection err: " + err)
-  }
+  go func (){
+    for {
+      resp := conn.Cmd()
+      if resp.Err != nil {
+        fmt.Println("Redis resp err: %s",err)
+      }
+    }
+  }()
+
 }
+// func (m *Master) QueryUrls(sql string) (rows, err){
+//   db, err := sql.Open(m.dbname, m.dbstring)
+//   defer db.Close()
+//   if err != nil {
+//     fmt.Println("open mysql err:" + err);
+//   }
+//   rows, err := db.Query(sql)
+// }
+//
+// func (m *Master) RedisAdd(){
+//   rs, err := redis.Dial("tcp", "127.0.0.1:6379")
+//   defer rs.Close()
+//   if err != nil {
+//     fmt.Println("Redis connection err: " + err)
+//   }
+// }

@@ -3,7 +3,9 @@ package redismq
 import (
   "net"
   "net/rpc"
+  "github.com/mediocregopher/radix.v2/redis"
 )
+
 type Worker {
   l net.Listener
   WorkerAddress string
@@ -70,9 +72,14 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) {
 }
 
 func DoAddRedis(){
-  rs, err := redis.Dial("tcp", "127.0.0.1:6379")
-  defer rs.Close()
+  conn, err := redis.Dial("tcp", "127.0.0.1:6379")
+  defer conn.Close()
   if err != nil {
-    fmt.Println("Redis connection err: " + err)
+    fmt.Println("Redis connection err: %s", err)
+  }
+
+  resp := conn.Cmd()
+  if resp.Err != nil {
+    fmt.Println("Redis resp err: %s",err)
   }
 }
