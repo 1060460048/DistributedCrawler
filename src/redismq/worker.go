@@ -66,9 +66,14 @@ func (w *Worker) StartRpcServer() {
 
 func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) {
   switch args.JobType {
-  case AddRedis:
-    DoAddRedis()
+  case Crawl:
+    DoCrawl(DojobArgs.Url)
+    //DoAddRedis(args.Url)
   }
+}
+
+func DoCrawl(url string) {
+  
 }
 
 func DoAddRedis(){

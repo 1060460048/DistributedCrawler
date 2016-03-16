@@ -33,43 +33,13 @@ func InitMaster(dbname, dbstring, MasterAddress string) *Master {
 func RunMaster(dbname, dbstring string) {
   m := InitMaster(dbname, dbstring)
 	l := sync.Mutex
-  m.StartRpcServer()
+  go StartRpcServer(m)
 
-  go func() {
-    for {
-      select {
-
-      }
+  for {
+    select {
+    case workAddr := <-m.redisterChannel:
     }
-  }()
-
-	/*get_url_from_mysql := func(m *Master) string {
-		var res = -1
-		l.Lock()
-		defer l.Unlock()
-    rows, err := m.QueryUrls("select * from urls")
-    if err != nil {
-      fmt.Println("open mysql err:" + err);
-    }
-    for rows.Next() {
-       var url string
-       err = rows.Scan(&url)
-       if err != nil {
-         fmt.Println("open mysql err:" + err);
-       }
-       fmt.Println(url)
-    }
-	}
-
-	add_url_to_redis := func(m *Master) {
-		l.Lock()
-		defer l.Unlock()
-	}
-
-  get_url_to_redis := func(m *Master) {
-		l.Lock()
-		defer l.Unlock()
-	}*/
+  }
 }
 
 func (m *Master) Register(args *RegisterArgs, res *RegisterReply) {
@@ -79,7 +49,7 @@ func (m *Master) Register(args *RegisterArgs, res *RegisterReply) {
    return nil
 }
 
-func (m *Master) StartRpcServer() {
+func StartRpcServer(m *Master) {
   rpcs := rpc.NewServer()
   rpcs.Register(m)
   l, e := net.Listen("unix", m.MasterAddress)
@@ -123,19 +93,3 @@ func () DispatchUrl() {
   }()
 
 }
-// func (m *Master) QueryUrls(sql string) (rows, err){
-//   db, err := sql.Open(m.dbname, m.dbstring)
-//   defer db.Close()
-//   if err != nil {
-//     fmt.Println("open mysql err:" + err);
-//   }
-//   rows, err := db.Query(sql)
-// }
-//
-// func (m *Master) RedisAdd(){
-//   rs, err := redis.Dial("tcp", "127.0.0.1:6379")
-//   defer rs.Close()
-//   if err != nil {
-//     fmt.Println("Redis connection err: " + err)
-//   }
-// }

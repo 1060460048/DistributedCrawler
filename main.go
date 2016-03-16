@@ -38,7 +38,7 @@ func main() {
     if os.Args[3] == "sequential" {
       redismq.RunSingle(5, 3, os.Args[2], Map, Reduce)
     } else {
-      mr := redismq.Makeredismq(5, 3, os.Args[2], os.Args[3])
+      mr := redismq.RunMaster(5, 3, os.Args[2], os.Args[3])
       // Wait until MR is done
       <- mr.DoneChannel
     }
