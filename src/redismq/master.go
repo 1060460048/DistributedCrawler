@@ -6,8 +6,7 @@ import (
   "sync"
   "net"
   "net/rpc"
-  _ "github.com/go-sql-driver/mysql"
-  _ "github.com/garyburd/redigo/redis"
+  "github.com/mediocregopher/radix.v2/redis"
 )
 
 type Master struct{
@@ -17,6 +16,7 @@ type Master struct{
   l               net.Listener
   alive           bool
   registerChannel chan string
+  urlChannel chan string
 }
 "root:1234567890@/test?charset=utf8"
 
@@ -27,6 +27,7 @@ func InitMaster(dbname, dbstring, MasterAddress string) *Master {
   m.MasterAddress = MasterAddress
   m.alive = true
   m.registerChannel = make(chan string)
+  m.urlChannel = make(chan string)
   return m
 }
 
@@ -76,7 +77,7 @@ func StartRpcServer(m *Master) {
 	}()
 }
 
-func () DispatchUrl() {
+func DispatchUrl() {
   conn, err := redis.Dial("tcp", "127.0.0.1:6379")
   defer conn.Close()
   if err != nil {
@@ -85,6 +86,13 @@ func () DispatchUrl() {
 
   go func (){
     for {
+      // resp := conn.Cmd("HMSET", "album:1", "title", "Electric Ladyland", "artist", "Jimi Hendrix", "price", 4.95, "likes", 8)
+      // // Check the Err field of the *Resp object for any errors.
+      // if resp.Err != nil {
+      //     log.Fatal(resp.Err)
+      // }
+      //
+      // fmt.Println("Electric Ladyland added!")
       resp := conn.Cmd()
       if resp.Err != nil {
         fmt.Println("Redis resp err: %s",err)
