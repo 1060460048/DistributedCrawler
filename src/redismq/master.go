@@ -77,7 +77,7 @@ func StartRpcServer(m *Master) {
 	}()
 }
 
-func DispatchUrl() {
+func DispatchUrl(m *Master) {
   conn, err := redis.Dial("tcp", "127.0.0.1:6379")
   defer conn.Close()
   if err != nil {
@@ -93,9 +93,16 @@ func DispatchUrl() {
       // }
       //
       // fmt.Println("Electric Ladyland added!")
-      resp := conn.Cmd()
-      if resp.Err != nil {
-        fmt.Println("Redis resp err: %s",err)
+      select{
+      case WorkerAddr:= <-m.WorkDownChnanel:
+        url, err := conn.Cmd("BLPOP", "url", 0).Str()
+        if err != nil {
+          fmt.Println(err)
+        }
+        args := &RegisterArgs
+        args.Url = url
+        var reply DojobReply
+        ok := call(WorkerAddr, "Worker.Dojob", args, &reply)
       }
     }
   }()

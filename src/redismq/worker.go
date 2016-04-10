@@ -3,6 +3,7 @@ package redismq
 import (
   "net"
   "net/rpc"
+  "container/list"
   "github.com/mediocregopher/radix.v2/redis"
 )
 
@@ -72,19 +73,21 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) {
   }
 }
 
-func DoCrawl(url string) {
-  
+func DoCrawl(url string) l list{
+  l := list.New()
+  return l
 }
 
-func DoAddRedis(){
+func DoAddRedis(l list){
   conn, err := redis.Dial("tcp", "127.0.0.1:6379")
   defer conn.Close()
   if err != nil {
     fmt.Println("Redis connection err: %s", err)
   }
-
-  resp := conn.Cmd()
-  if resp.Err != nil {
-    fmt.Println("Redis resp err: %s",err)
+  for url := l.Front; url != nil; url = url.Next() {
+    resp := conn.Cmd("RPUSH", "url", url)
+    if resp.Err != nil {
+      fmt.Println("Redis resp err: %s",err)
+    }
   }
 }
