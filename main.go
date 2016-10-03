@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"log"
+	"os"
+	"redismq"
 )
 
 type StatisticsServer struct {

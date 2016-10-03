@@ -5,7 +5,7 @@ import "net/rpc"
 
 type DojobArgs struct {
 	// Job string
-	// JobType string
+	JobType string
 	Url string
 }
 

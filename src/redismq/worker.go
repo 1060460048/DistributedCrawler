@@ -3,29 +3,32 @@ package redismq
 import (
   "net"
   "net/rpc"
-  "container/list"
-  "github.com/mediocregopher/radix.v2/redis"
+  "fmt"
+  //"container/list"
+  //"github.com/mediocregopher/radix.v2/redis"
 )
 
-type Worker {
+type Worker struct {
   l net.Listener
+  nRPC int
+  nJobs int
   WorkerAddress string
 }
 
 func InitWorker(WorkerAddress string, nRPC int) *Worker{
-  w := &Worker{}
+  w := new(Worker)
   w.nRPC = nRPC
   w.WorkerAddress = WorkerAddress
   return w
 }
 
-func RunWorker(MasterAddress, WorkerAddress string, nRPC int) {
-  w := InitWorker(WorkerAddress, nRPC)
-  w.StartRpcServer()
-  w.Register(MasterAddress, WorkerAddress string)
+func RunWorker(masterAddress, workerAddress string, nRPC int) {
+  w := InitWorker(workerAddress, nRPC)
+  w.StartRpcServer(masterAddress)
+  //w.Register(MasterAddress, WorkerAddress string)
 }
 
-func (w *Worker) Register(MasterAddress, WorkerAddress string) {
+func Register(masterAddress, workerAddress string) {
   /*
   args := &RegisterArgs{}
 	args.Worker = me
@@ -36,49 +39,43 @@ func (w *Worker) Register(MasterAddress, WorkerAddress string) {
 	}
   */
   args := &RegisterArgs{}
-  args.worker = WorkerAddress
+  args.Worker = workerAddress
   var reply RegisterReply
-  ok := call(MasterAddress, "Master.Register", args, &reply)
+  ok := call(masterAddress, "Master.Register", args, &reply)
 }
 
-func (w *Worker) StartRpcServer() {
+func (w *Worker) StartRpcServer(masterAddress string) {
   rpcs := rpc.NewServer()
   rpcs.Register(w)
   l, e := net.Listen("unix", w.WorkerAddress)
   if e != nil {
-		log.Fatal("RunWorker: worker ", me, " error: ", e)
+		fmt.Println("RunWorker: worker ", w.WorkerAddress, " error: ", e)
 	}
-	wk.l = l
+	w.l = l
   //add your code here
-
-  for wk.nRPC != 0 {
-		conn, err := wk.l.Accept()
+  Register(masterAddress, w.WorkerAddress)
+  for w.nRPC != 0 {
+		conn, err := w.l.Accept()
 		if err == nil {
-			wk.nRPC -= 1
+			w.nRPC -= 1
 			go rpcs.ServeConn(conn)
-			wk.nJobs += 1
+			w.nJobs += 1
 		} else {
 			break
 		}
 	}
-	wk.l.Close()
-	DPrintf("RunWorker %s exit\n", me)
+	w.l.Close()
 }
 
 func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) {
   switch args.JobType {
-  case Crawl:
-    DoCrawl(DojobArgs.Url)
+  case "Crawl":
+    //DoCrawl(DojobArgs.Url)
     //DoAddRedis(args.Url)
   }
 }
 
-func DoCrawl(url string) l list{
-  l := list.New()
-  return l
-}
-
-func DoAddRedis(l list){
+/*func DoAddRedis(l list){
   conn, err := redis.Dial("tcp", "127.0.0.1:6379")
   defer conn.Close()
   if err != nil {
@@ -90,4 +87,4 @@ func DoAddRedis(l list){
       fmt.Println("Redis resp err: %s",err)
     }
   }
-}
+}*/
