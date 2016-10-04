@@ -89,7 +89,7 @@ func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
 func startRpcServer(m *Master) {
   rpcs := rpc.NewServer()
   rpcs.Register(m)
-  l, e := net.Listen("unix", m.MasterAddress)
+  l, e := net.Listen("tcp", m.MasterAddress)
   if e != nil {
 		fmt.Println("RegstrationServer", m.MasterAddress, " error: ", e)
 	}
