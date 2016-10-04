@@ -15,7 +15,7 @@ type Worker struct {
   WorkerAddress string
 }
 
-func InitWorker(WorkerAddress string, nRPC int) *Worker{
+func initWorker(WorkerAddress string, nRPC int) *Worker{
   w := new(Worker)
   w.nRPC = nRPC
   w.WorkerAddress = WorkerAddress
@@ -23,28 +23,7 @@ func InitWorker(WorkerAddress string, nRPC int) *Worker{
 }
 
 func RunWorker(masterAddress, workerAddress string, nRPC int) {
-  w := InitWorker(workerAddress, nRPC)
-  w.StartRpcServer(masterAddress)
-  //w.Register(MasterAddress, WorkerAddress string)
-}
-
-func Register(masterAddress, workerAddress string) {
-  /*
-  args := &RegisterArgs{}
-	args.Worker = me
-	var reply RegisterReply
-	ok := call(master, "MapReduce.Register", args, &reply)
-	if ok == false {
-		fmt.Printf("Register: RPC %s register error\n", master)
-	}
-  */
-  args := &RegisterArgs{}
-  args.Worker = workerAddress
-  var reply RegisterReply
-  ok := call(masterAddress, "Master.Register", args, &reply)
-}
-
-func (w *Worker) StartRpcServer(masterAddress string) {
+  w := initWorker(workerAddress, nRPC)
   rpcs := rpc.NewServer()
   rpcs.Register(w)
   l, e := net.Listen("unix", w.WorkerAddress)
@@ -53,7 +32,7 @@ func (w *Worker) StartRpcServer(masterAddress string) {
 	}
 	w.l = l
   //add your code here
-  Register(masterAddress, w.WorkerAddress)
+  register(masterAddress, w.WorkerAddress)
   for w.nRPC != 0 {
 		conn, err := w.l.Accept()
 		if err == nil {
@@ -67,12 +46,21 @@ func (w *Worker) StartRpcServer(masterAddress string) {
 	w.l.Close()
 }
 
-func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) {
+func register(masterAddress, workerAddress string) {
+  args := &RegisterArgs{}
+  args.Worker = workerAddress
+  var reply RegisterReply
+  call(masterAddress, "Master.Register", args, &reply)
+}
+
+func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
+  fmt.Println("DoJob: JobType ", args.JobType)
   switch args.JobType {
   case "Crawl":
     //DoCrawl(DojobArgs.Url)
     //DoAddRedis(args.Url)
   }
+  return nil
 }
 
 /*func DoAddRedis(l list){

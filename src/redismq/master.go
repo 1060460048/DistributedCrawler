@@ -5,7 +5,8 @@ import (
   //"sync"
   "net"
   "net/rpc"
-  "github.com/mediocregopher/radix.v2/redis"
+  //"github.com/mediocregopher/radix.v2/redis"
+  //"github.com/garyburd/redigo/redis"
 )
 
 type Master struct {
@@ -17,55 +18,75 @@ type Master struct {
   registerChannel chan string
   workDownChnanel chan string
   urlChannel chan string
-  workers map[string]bool
+  workers map[WorkInfo]bool
 }
 
-func InitMaster(dbname, MasterAddress string) *Master {
+type WorkInfo struct {
+  workAddr string
+}
+
+func initMaster(dbname, MasterAddress string) *Master {
   m := &Master{}
   m.dbname = dbname
   m.MasterAddress = MasterAddress
   m.alive = true
   m.registerChannel = make(chan string)
   m.urlChannel = make(chan string)
-  m.workers = make(workers[string]bool)
+  m.workers = make(map[WorkInfo]bool)
   return m
 }
 
 func RunMaster(dbname, mr string) {
-  m := InitMaster(dbname, mr)
-  go StartRpcServer(m)
-
+  m := initMaster(dbname, mr)
+  go startRpcServer(m)
+  fmt.Println("Master has run: ", mr)
   for {
     select {
     case workAddr := <-m.registerChannel:
-      m.workers[workAddr] = true;
-      DispatchJob(workAddr)
-    case workAddr :=m.workDownChnanel:
-      m.workers[workAddr] = true;
-      DispatchJob(workAddr)
+      work := WorkInfo{workAddr : workAddr}
+      m.workers[work] = true;
+      fmt.Println("Register worker: ", work.workAddr)
+      DispatchJob(work)
+    case workAddr := <-m.workDownChnanel:
+      work := WorkInfo{workAddr : workAddr}
+      m.workers[work] = true;
+      fmt.Println("WorkDown worker: ", work.workAddr)
+      DispatchJob(work)
     }
   }
 }
 
-func DispatchJob(url string) {
+func DispatchJob(workInfo WorkInfo) {
+  /*conn, err := redis.Dial("tcp", "127.0.0.1: ")
+  defer conn.Close()
+  if err != nil {
+    fmt.Println("Redis connection err: %s", err)
+  }
+
+  url, err := conn.Cmd("BLPOP", "url", 0).Str()
+  if err != nil {
+    fmt.Println(err)
+  }
+  fmt.Println("DispatchJob: ", url)*/
+
   args := new(DojobArgs)
-  args.Url = url
+  args.Url = "www.baidu.com"//url
   args.JobType = "hehe"
   var reply DojobReply
-  ok := call(workerAddr, "Worker.Dojob", args, &reply)
+  call(workInfo.workAddr, "Worker.Dojob", args, &reply)
 }
 
-func (m *Master) Register(args *RegisterArgs, res *RegisterReply) {
-   fmt.Println("Register worker:%s\n", args.Worker)
+func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
    m.registerChannel <- args.Worker
+   return nil
 }
 
-func (m *Master) JobFinish(args *FinishArgs, res *FinishReply) {
+/*func (m *Master) JobFinish(args *FinishArgs, res *FinishReply) {
    fmt.Println("Finish worker:%s\n", args.Worker)
    m.workDownChnanel <- args.Worker
-}
+}*/
 
-func StartRpcServer(m *Master) {
+func startRpcServer(m *Master) {
   rpcs := rpc.NewServer()
   rpcs.Register(m)
   l, e := net.Listen("unix", m.MasterAddress)
@@ -77,17 +98,14 @@ func StartRpcServer(m *Master) {
 	// accepting connections to another thread.
 	go func() {
 		for m.alive {
-      fmt.Println("RegstrationServer", m.MasterAddress, " m.alive ", m.alive)
 			conn, err := m.l.Accept()
 			if err == nil {
-				go func() {
-					rpcs.ServeConn(conn)
-					conn.Close()
-				}()
+				go rpcs.ServeConn(conn)
 			} else {
 				fmt.Println("RegistrationServer: accept error", err)
 				break
 			}
+      conn.Close()
 		}
 		fmt.Println("RegistrationServer: done\n")
 	}()
