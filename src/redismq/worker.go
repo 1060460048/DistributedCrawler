@@ -26,7 +26,7 @@ func RunWorker(masterAddress, workerAddress string, nRPC int) {
   w := initWorker(workerAddress, nRPC)
   rpcs := rpc.NewServer()
   rpcs.Register(w)
-  l, e := net.Listen("unix", w.WorkerAddress)
+  l, e := net.Listen("tcp", w.WorkerAddress)
   if e != nil {
 		fmt.Println("RunWorker: worker ", w.WorkerAddress, " error: ", e)
 	}

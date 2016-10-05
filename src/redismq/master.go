@@ -5,6 +5,7 @@ import (
   //"sync"
   "net"
   "net/rpc"
+  "net/http"
   //"github.com/mediocregopher/radix.v2/redis"
   //"github.com/garyburd/redigo/redis"
 )
@@ -39,6 +40,7 @@ func initMaster(dbname, MasterAddress string) *Master {
 func RunMaster(dbname, mr string) {
   m := initMaster(dbname, mr)
   go startRpcServer(m)
+  go RunRedisMq(dbname, 0)
   fmt.Println("Master has run: ", mr)
   for {
     select {
@@ -57,18 +59,6 @@ func RunMaster(dbname, mr string) {
 }
 
 func DispatchJob(workInfo WorkInfo) {
-  /*conn, err := redis.Dial("tcp", "127.0.0.1: ")
-  defer conn.Close()
-  if err != nil {
-    fmt.Println("Redis connection err: %s", err)
-  }
-
-  url, err := conn.Cmd("BLPOP", "url", 0).Str()
-  if err != nil {
-    fmt.Println(err)
-  }
-  fmt.Println("DispatchJob: ", url)*/
-
   args := new(DojobArgs)
   args.Url = "www.baidu.com"//url
   args.JobType = "hehe"
@@ -87,9 +77,13 @@ func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
 }*/
 
 func startRpcServer(m *Master) {
-  rpcs := rpc.NewServer()
+  rpc.Register(m)
+  rpc.HandleHTTP()
+  err := http.ListenAndServe(m.MasterAddress, nil)
+  fmt.Println("RegistrationServer: accept error", err)
+  /*rpcs := rpc.NewServer()
   rpcs.Register(m)
-  l, e := net.Listen("unix", m.MasterAddress)
+  l, e := net.Listen("tcp", m.MasterAddress)
   if e != nil {
 		fmt.Println("RegstrationServer", m.MasterAddress, " error: ", e)
 	}
@@ -108,7 +102,7 @@ func startRpcServer(m *Master) {
       conn.Close()
 		}
 		fmt.Println("RegistrationServer: done\n")
-	}()
+	}()*/
 }
 
 /*func DispatchUrl(m *Master) {

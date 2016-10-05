@@ -1,7 +1,7 @@
 package redismq
 
 import (
-  //"fmt"
+  "fmt"
   //"sync"
   //"net"
   //"net/rpc"
@@ -40,6 +40,7 @@ func initRedisMq(RedisHost string, RedisDB int) *RedisMq {
 func RunRedisMq(RedisHost string, RedisDB int) {
   rmq := initRedisMq(RedisHost, RedisDB)
   t := time.NewTicker(60 * time.Second)
+  fmt.Println("RunRedisMq: ", RedisHost, " RedisDB: ", RedisDB)
   for {
     select {
     case <-t.C:
@@ -49,5 +50,12 @@ func RunRedisMq(RedisHost string, RedisDB int) {
 }
 
 func readUrlFromMySQL(rmq *RedisMq) {
-
+  rc := rmq.RedisClient.Get()
+  defer rc.Close()
+  //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
+  n, _ := redis.Int(rc.Do("llen", "url"))
+  fmt.Printf("url length in redis: ", n)
+  if n < 100 {
+    //read
+  }
 }
