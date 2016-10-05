@@ -54,7 +54,7 @@ func readUrlFromMySQL(rmq *RedisMq) {
   defer rc.Close()
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
   n, _ := redis.Int(rc.Do("llen", "url"))
-  fmt.Printf("url length in redis: ", n)
+  fmt.Printf("url length in redis: %#v\n", n)
   if n < 100 {
     //read
   }
