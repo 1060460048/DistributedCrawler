@@ -42,6 +42,8 @@ Screenshots
 -----------
 
 ### demo show
+#### design
+![](https://github.com/zjucx/redismq/blob/master/docs/distributeredis.bmp)
 #### master
 ![](https://github.com/zjucx/redismq/blob/master/docs/master.png)
 #### workers
