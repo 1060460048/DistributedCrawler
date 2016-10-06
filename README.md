@@ -46,8 +46,7 @@ Screenshots
 ![](https://github.com/zjucx/redismq/blob/master/docs/master.png)
 #### workers
 ![](https://github.com/zjucx/redismq/blob/master/docs/worker.png)
-
-
+![](https://github.com/zjucx/redismq/blob/master/docs/contains.png)
 
 Discussing
 ----------
