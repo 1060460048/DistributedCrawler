@@ -1,0 +1,5 @@
+package scrawler
+
+import (
+  "fmt"
+)

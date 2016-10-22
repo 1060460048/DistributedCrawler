@@ -8,7 +8,7 @@ import (
 	"redismq"
 )
 // Can be run in 3 ways:
-// 1) Sequential (e.g., go run main.go master x.txt sequential)
+// 1) Scrawler (e.g., go run main.go master x.txt sequential)
 // 2) Master (e.g., go run main.go master x.txt localhost:7777)
 // 3) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
 func main() {
