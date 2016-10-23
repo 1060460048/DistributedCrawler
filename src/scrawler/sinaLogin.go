@@ -42,6 +42,17 @@ func weiboLogin(username, passwd string){
   // form data params
   strParams := buildParems(su, sp, loginInfo)
   loginResp, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
+
+  //请求passport
+	passportResp, _ := callPassport(loginResp, strCookies+";"+loginCookies)
+	uniqueid := MatchData(passportResp, `"uniqueid":"(.*?)"`)
+	homeUrl := "http://weibo.com/u/" + uniqueid + "/home?topnav=1&wvr=6"
+
+	//进入个人主页
+	entryHome(homeUrl, loginCookies)
+	//抓取个首页
+	result := getPage(loginCookies)
+	fmt.Println(result)
 }
 
 func inputcgi(inputDone chan string){
@@ -129,4 +140,18 @@ func buildParems(su, sp string, loginInfo map[string]string) string {
   + "&sp=" + sp
   + "&sr=1280*800&encoding=UTF-8&prelt=839&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3Dparent.sinaSSOController.feedBackUrlCallBack&returntype=META"
   return strParams
+}
+
+//获取passport并请求
+func callPassport(resp, cookies string) (passresp, passcookies string) {
+	//提取passport跳转地址
+	passportUrl := RegexFind(resp, `location.replace\('(.*?)'\)`)
+	passresp, passcookies = DoRequest(`GET`, passportUrl, ``, cookies, ``, header)
+	return
+}
+
+//进入首页
+func entryHome(redirectUrl, cookies string) (homeResp, homeCookies string) {
+	homeResp, homeCookies = DoRequest(`GET`, redirectUrl, ``, cookies, ``, header)
+	return
 }
