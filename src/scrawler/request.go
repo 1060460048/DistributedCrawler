@@ -1,13 +1,20 @@
 package scrawler
 
 import (
-  "fmt"
-  "strings"
+	"crypto/tls"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"regexp"
+	"strings"
 )
 /**
  *
  */
-func DoRequest(method, reqUrl, params, cookie, domain string, header map[string]string) (resBody, resCookies string){
+func DoRequest(method, reqUrl, params, cookies, domain string, header map[string]string) (resBody, resCookies string){
   //prepare params for method
   method = strings.ToUpper(method)
 
@@ -29,7 +36,7 @@ func DoRequest(method, reqUrl, params, cookie, domain string, header map[string]
   // 2) prepare header if has
   if header != nil {
     for k, v := range header {
-      res.Header.Set(k, v)
+      req.Header.Set(k, v)
     }
   }
 
@@ -43,7 +50,7 @@ func DoRequest(method, reqUrl, params, cookie, domain string, header map[string]
 
   // 4) prepare transport
   var transport *http.Transport = nil
-  proxyUrl, _ := url.Parse("http://127.0.0.1:8888")
+  //proxyUrl, _ := url.Parse("http://127.0.0.1:8888")
   if true {
     transport = &http.Transport{
       TLSClientConfig: &tls.Config{
@@ -52,7 +59,7 @@ func DoRequest(method, reqUrl, params, cookie, domain string, header map[string]
         MaxVersion:         tls.VersionTLS12,
       },
       DisableCompression:true,
-      Proxy: http.ProxyURL(proxyUrl),
+      //Proxy: http.ProxyURL(proxyUrl),
     }
   } else {
     transport = &http.Transport{}
@@ -77,15 +84,15 @@ func DoRequest(method, reqUrl, params, cookie, domain string, header map[string]
 		log.Fatalln("ReadAll Response Err:", err)
 		return
 	}
-	respBody = string(body)
+	resBody = string(body)
 
 	arrCookies := resp.Cookies()
 	for _, data := range arrCookies {
-		respCookies += data.Name + "=" + data.Value + ";"
+		resCookies += data.Name + "=" + data.Value + ";"
 	}
-	if len(respCookies) > 0 {
-		respCookies = SubString(respCookies, 0, len(respCookies)-1)
-	}
+	/*if len(resCookies) > 0 {
+		resCookies = SubString(respCookies, 0, len(respCookies)-1)
+	}*/
 
 	return
 }
@@ -105,7 +112,7 @@ func appendCookies(strCookies, path, domain string) []*http.Cookie {
   // parse cookie from string to map
   mapCookie := make(map[string]string)
 	reg := regexp.MustCompile(`([^=]+)=([^;]*);?`)
-	arrCookie := reg.FindAllStringSubmatch(cookies, -1)
+	arrCookie := reg.FindAllStringSubmatch(strCookies, -1)
 	if len(arrCookie) > 0 {
 		for i := 0; i < len(arrCookie); i++ {
 			mapCookie[arrCookie[i][1]] = arrCookie[i][2]

@@ -1,7 +1,17 @@
 package scrawler
 
 import (
-  "fmt"
+	"crypto/rand"
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
+	"math/big"
+	"net/url"
+	"os"
+  "regexp"
+  "encoding/json"
+  "bufio"
 )
 
 var header = map[string]string{
@@ -17,10 +27,10 @@ var header = map[string]string{
   "Content-Type":              "application/x-www-form-urlencoded",
 }
 
-func weiboLogin(username, passwd string){
+func WeiboLogin(username, passwd string){
   //get cookie for sina website
   strCookies := getCookies()
-
+fmt.Println("==============getCookies=======================")
   // crypto username for logining
   su := url.QueryEscape(username)
   su = base64.StdEncoding.EncodeToString([]byte(su))
@@ -28,31 +38,34 @@ func weiboLogin(username, passwd string){
   // crypto password for logining
   loginInfo := getPreLogin(su)
   sp := encryptPassword(loginInfo, passwd)
-
+fmt.Println("==============getPreLogin=======================" + strCookies)
   // is need cgi or not
   var cgi string
   if loginInfo["showpin"] == "1" {
     inputDone := make (chan string)
     go inputcgi(inputDone)
-    cgi <- inputDone
+    cgi = <- inputDone
   }
 
+fmt.Println("==============getPreLogin1=======================")
   // Do login POST
   loginUrl := `http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)`
   // form data params
-  strParams := buildParems(su, sp, loginInfo)
+  strParams := buildParems(su, sp, cgi, loginInfo)
   loginResp, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
-
+fmt.Println("==============getPreLogin2=======================" + loginCookies)
   //请求passport
 	passportResp, _ := callPassport(loginResp, strCookies+";"+loginCookies)
+  fmt.Println("==============getPreLogin3=======================")
 	uniqueid := MatchData(passportResp, `"uniqueid":"(.*?)"`)
 	homeUrl := "http://weibo.com/u/" + uniqueid + "/home?topnav=1&wvr=6"
 
 	//进入个人主页
 	entryHome(homeUrl, loginCookies)
+  fmt.Println("==============getPreLogin4=======================")
 	//抓取个首页
-	result := getPage(loginCookies)
-	fmt.Println(result)
+	//result := getPage(loginCookies)
+	//fmt.Println(result)
 }
 
 func inputcgi(inputDone chan string){
@@ -86,9 +99,10 @@ func encryptPassword(loginInfo map[string]string, password string) string {
 /*
  * open main page and you should get cookie and save
  */
- func getCookies() (strCookies string) {
+ func getCookies() string{
    loginUrl := `http://weibo.com/login.php`
    _, strCookies := DoRequest(`GET`, loginUrl, ``, ``, ``, nil)
+   return strCookies
  }
 
 /*
@@ -98,12 +112,13 @@ func encryptPassword(loginInfo map[string]string, password string) string {
 func getPreLogin(su string) map[string]string {
   preLoginUrl := `https://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=`+
   su + `&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.18)&_=`
-  resBody, resCookies := Dorequest(`GET`, preLoginUrl, ``, ``, ``, nil)
+  resBody, _ := DoRequest(`GET`, preLoginUrl, ``, ``, ``, nil)
   //use regex extra json string
-  strLoginInfo = RegexFind(resBody, `\((.*?)\)`)
+  strLoginInfo := RegexFind(resBody, `\((.*?)\)`)
+  fmt.Println("==============json str 转map=======================" + strLoginInfo)
   //parse json str to map[string]string
   //json str 转map
-	var loginInfo map[string]interface{}
+	var loginInfo map[string]string
 	if err := json.Unmarshal([]byte(strLoginInfo), &loginInfo); err == nil {
 		fmt.Println("==============json str 转map=======================")
 		fmt.Println(loginInfo["servertime"])
@@ -132,13 +147,17 @@ func getPreLogin(su string) map[string]string {
  * url:http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack
  * returntype:META
  */
-func buildParems(su, sp string, loginInfo map[string]string) string {
-  strParams := "entry=weibo&gateway=1&from=&savestate=7&useticket=1&pagerefer=&vsnf=1&su="
-  + su + "&service=miniblog&servertime=" + loginInfo["servertime"]
-  + "&nonce=" + loginInfo["nonce"]
-  + "&pwencode=rsa2&rsakv=" + loginInfo["rsakv"]
-  + "&sp=" + sp
-  + "&sr=1280*800&encoding=UTF-8&prelt=839&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3Dparent.sinaSSOController.feedBackUrlCallBack&returntype=META"
+func buildParems(su, sp, captcha string, loginInfo map[string]string) string {
+  strParams := "entry=weibo&gateway=1&from=&savestate=7&useticket=1&pagerefer=&vsnf=1&su=" +
+  su + "&service=miniblog&servertime=" + loginInfo["servertime"] +
+  "&nonce=" + loginInfo["nonce"] +
+  "&pwencode=rsa2&rsakv=" + loginInfo["rsakv"] +
+  "&sp=" + sp +
+  "&sr=1280*800&encoding=UTF-8&prelt=839&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3Dparent.sinaSSOController.feedBackUrlCallBack&returntype=META"
+  //需要验证码
+	if loginInfo["showpin"] == "1" {
+		strParams += "&door=" + captcha
+	}
   return strParams
 }
 
@@ -146,6 +165,7 @@ func buildParems(su, sp string, loginInfo map[string]string) string {
 func callPassport(resp, cookies string) (passresp, passcookies string) {
 	//提取passport跳转地址
 	passportUrl := RegexFind(resp, `location.replace\('(.*?)'\)`)
+  fmt.Println("==============getPreLogin=======================" + passportUrl)
 	passresp, passcookies = DoRequest(`GET`, passportUrl, ``, cookies, ``, header)
 	return
 }
@@ -153,5 +173,34 @@ func callPassport(resp, cookies string) (passresp, passcookies string) {
 //进入首页
 func entryHome(redirectUrl, cookies string) (homeResp, homeCookies string) {
 	homeResp, homeCookies = DoRequest(`GET`, redirectUrl, ``, cookies, ``, header)
+	return
+}
+
+/*
+ * @functional 正则表达式提取数据
+ * @param string strText 输入文本
+ * @param string strReg 正则表达式
+ * @return string
+ */
+func RegexFind(strText, strReg string) (result string) {
+	reg := regexp.MustCompile(strReg)
+	arrMatch := reg.FindAllStringSubmatch(strText, -1)
+	if len(arrMatch) > 0 {
+		result = arrMatch[0][1]
+	}
+	return
+}
+/**
+ * @functional 正则表达式匹配数据
+ * @string strText 源字符串
+ * @string strReg 正则表达式
+ * @return string
+ */
+func MatchData(strText, strReg string) (result string) {
+	reg := regexp.MustCompile(strReg)
+	arrMatch := reg.FindAllStringSubmatch(strText, -1)
+	if len(arrMatch) > 0 {
+		result = arrMatch[0][1]
+	}
 	return
 }

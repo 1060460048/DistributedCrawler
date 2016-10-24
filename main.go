@@ -6,6 +6,7 @@ import (
 	//"log"
 	"os"
 	"redismq"
+	"scrawler"
 )
 // Can be run in 3 ways:
 // 1) Scrawler (e.g., go run main.go master x.txt sequential)
@@ -13,6 +14,7 @@ import (
 // 3) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
 func main() {
   if len(os.Args) != 4 {
+		scrawler.WeiboLogin("hfutcx@163.com", "dao88xiang")
     fmt.Printf("%s: see usage comments in file\n", os.Args[0])
   } else if os.Args[1] == "master" {
     if os.Args[3] == "sequential" {
