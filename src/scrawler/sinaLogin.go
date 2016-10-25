@@ -173,7 +173,7 @@ func callPassport(resp, cookies string) (passresp, passcookies string) {
 
 //进入首页
 func entryHome(redirectUrl, cookies string) (homeResp, homeCookies string) {
-  fmt.Println("======entryHome" + redirectUrl + cookies)
+  fmt.Println("======entryHome: " + redirectUrl)
 	homeResp, homeCookies = DoRequest(`GET`, redirectUrl, ``, cookies, ``, header)
 	return
 }
