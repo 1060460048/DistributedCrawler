@@ -12,6 +12,7 @@ import (
   "regexp"
   "encoding/json"
   "bufio"
+  "strconv"
 )
 
 var header = map[string]string{
@@ -30,7 +31,6 @@ var header = map[string]string{
 func WeiboLogin(username, passwd string){
   //get cookie for sina website
   strCookies := getCookies()
-fmt.Println("==============getCookies=======================")
   // crypto username for logining
   su := url.QueryEscape(username)
   su = base64.StdEncoding.EncodeToString([]byte(su))
@@ -38,31 +38,27 @@ fmt.Println("==============getCookies=======================")
   // crypto password for logining
   loginInfo := getPreLogin(su)
   sp := encryptPassword(loginInfo, passwd)
-fmt.Println("==============getPreLogin=======================" + strCookies)
+
   // is need cgi or not
   var cgi string
-  if loginInfo["showpin"] == "1" {
+  if loginInfo["showpin"] == 1 {
     inputDone := make (chan string)
     go inputcgi(inputDone)
     cgi = <- inputDone
   }
 
-fmt.Println("==============getPreLogin1=======================")
   // Do login POST
   loginUrl := `http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)`
   // form data params
   strParams := buildParems(su, sp, cgi, loginInfo)
   loginResp, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
-fmt.Println("==============getPreLogin2=======================" + loginCookies)
   //请求passport
 	passportResp, _ := callPassport(loginResp, strCookies+";"+loginCookies)
-  fmt.Println("==============getPreLogin3=======================")
 	uniqueid := MatchData(passportResp, `"uniqueid":"(.*?)"`)
 	homeUrl := "http://weibo.com/u/" + uniqueid + "/home?topnav=1&wvr=6"
 
 	//进入个人主页
 	entryHome(homeUrl, loginCookies)
-  fmt.Println("==============getPreLogin4=======================")
 	//抓取个首页
 	//result := getPage(loginCookies)
 	//fmt.Println(result)
@@ -84,14 +80,15 @@ func inputcgi(inputDone chan string){
  * password = RSAKey.encrypt([me.servertime, me.nonce].join("\t") + "\n" + password)
  *
  */
-func encryptPassword(loginInfo map[string]string, password string) string {
+func encryptPassword(loginInfo map[string]interface{}, password string) string {
+  fmt.Println("======encryptPassword")
   z := new(big.Int)
-	z.SetString(loginInfo["pubkey"], 16)
+	z.SetString(loginInfo["pubkey"].(string), 16)
 	pub := rsa.PublicKey{
 		N: z,
 		E: 65537,
 	}
-	encryString := loginInfo["servertime"] + "\t" + loginInfo["nonce"] + "\n" + password
+	encryString := strconv.Itoa(int(loginInfo["servertime"].(float64))) + "\t" + loginInfo["nonce"].(string) + "\n" + password
 	encryResult, _ := rsa.EncryptPKCS1v15(rand.Reader, &pub, []byte(encryString))
 	return hex.EncodeToString(encryResult)
 }
@@ -100,6 +97,7 @@ func encryptPassword(loginInfo map[string]string, password string) string {
  * open main page and you should get cookie and save
  */
  func getCookies() string{
+   fmt.Println("======getCookies")
    loginUrl := `http://weibo.com/login.php`
    _, strCookies := DoRequest(`GET`, loginUrl, ``, ``, ``, nil)
    return strCookies
@@ -109,19 +107,20 @@ func encryptPassword(loginInfo map[string]string, password string) string {
  * when finish inputing the username, send the prelogin req
  * you can get login info for logining sina
  */
-func getPreLogin(su string) map[string]string {
+func getPreLogin(su string) map[string]interface{} {
   preLoginUrl := `https://login.sina.com.cn/sso/prelogin.php?entry=weibo&callback=sinaSSOController.preloginCallBack&su=`+
   su + `&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.18)&_=`
   resBody, _ := DoRequest(`GET`, preLoginUrl, ``, ``, ``, nil)
   //use regex extra json string
   strLoginInfo := RegexFind(resBody, `\((.*?)\)`)
-  fmt.Println("==============json str 转map=======================" + strLoginInfo)
+  fmt.Println("======getPreLogin:" + strLoginInfo)
   //parse json str to map[string]string
   //json str 转map
-	var loginInfo map[string]string
+	var loginInfo map[string]interface{}
 	if err := json.Unmarshal([]byte(strLoginInfo), &loginInfo); err == nil {
 		fmt.Println("==============json str 转map=======================")
-		fmt.Println(loginInfo["servertime"])
+		fmt.Println(loginInfo["pubkey"].(string))
+    //return nil
 	}
   return loginInfo
 }
@@ -147,15 +146,16 @@ func getPreLogin(su string) map[string]string {
  * url:http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack
  * returntype:META
  */
-func buildParems(su, sp, captcha string, loginInfo map[string]string) string {
+func buildParems(su, sp, captcha string, loginInfo map[string]interface{}) string {
+  fmt.Println("======buildParems")
   strParams := "entry=weibo&gateway=1&from=&savestate=7&useticket=1&pagerefer=&vsnf=1&su=" +
-  su + "&service=miniblog&servertime=" + loginInfo["servertime"] +
-  "&nonce=" + loginInfo["nonce"] +
-  "&pwencode=rsa2&rsakv=" + loginInfo["rsakv"] +
+  su + "&service=miniblog&servertime=" + strconv.Itoa(int(loginInfo["servertime"].(float64))) +
+  "&nonce=" + loginInfo["nonce"].(string) +
+  "&pwencode=rsa2&rsakv=" + loginInfo["rsakv"].(string) +
   "&sp=" + sp +
   "&sr=1280*800&encoding=UTF-8&prelt=839&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3Dparent.sinaSSOController.feedBackUrlCallBack&returntype=META"
   //需要验证码
-	if loginInfo["showpin"] == "1" {
+	if loginInfo["showpin"].(float64) == 1 {
 		strParams += "&door=" + captcha
 	}
   return strParams
@@ -163,15 +163,17 @@ func buildParems(su, sp, captcha string, loginInfo map[string]string) string {
 
 //获取passport并请求
 func callPassport(resp, cookies string) (passresp, passcookies string) {
+  fmt.Println("======callPassport:" + resp)
 	//提取passport跳转地址
-	passportUrl := RegexFind(resp, `location.replace\('(.*?)'\)`)
-  fmt.Println("==============getPreLogin=======================" + passportUrl)
+	passportUrl := RegexFind(resp, `location.replace\(\'(.*?)\'\)`)
+  fmt.Println("======callPassport:" + passportUrl)
 	passresp, passcookies = DoRequest(`GET`, passportUrl, ``, cookies, ``, header)
 	return
 }
 
 //进入首页
 func entryHome(redirectUrl, cookies string) (homeResp, homeCookies string) {
+  fmt.Println("======entryHome" + redirectUrl + cookies)
 	homeResp, homeCookies = DoRequest(`GET`, redirectUrl, ``, cookies, ``, header)
 	return
 }

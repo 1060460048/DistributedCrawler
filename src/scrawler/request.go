@@ -87,9 +87,11 @@ func DoRequest(method, reqUrl, params, cookies, domain string, header map[string
 	resBody = string(body)
 
 	arrCookies := resp.Cookies()
+
 	for _, data := range arrCookies {
 		resCookies += data.Name + "=" + data.Value + ";"
 	}
+
 	/*if len(resCookies) > 0 {
 		resCookies = SubString(respCookies, 0, len(respCookies)-1)
 	}*/
