@@ -7,11 +7,15 @@ import (
   "strings"
   "os"
   "bufio"
+  "path/filepath"
 )
 
 var mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0"
 
 func Scrawler(username, passwd string){
+
+  getFilelist("./data")
+  return
   // get login cookies
   loginCookies := WeiboLogin(username, passwd)
 
@@ -82,4 +86,29 @@ func getPageData(filePath, startUrl, loginCookies string) error {
     //fmt.Fprintln(w, lineStr)
   }
   return w.Flush()
+}
+
+func getFilelist(path string) {
+  i := 0
+  err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+    if ( f == nil ) {return err}
+    if f.IsDir() {return nil}
+    i++
+    fmt.Println(path)
+    err = os.Rename(path, strconv.Itoa(i))     //重命名 C:\\log\\2013.log 文件为install.txt
+    if err != nil {
+        //如果重命名文件失败,则输出错误 file rename Error!
+        fmt.Println("file rename Error!")
+        //打印错误详细信息
+        fmt.Printf("%s", err)
+    } else {
+        //如果文件重命名成功,则输出 file rename OK!
+        fmt.Println("file rename OK!")
+    }
+
+    return nil
+  })
+  if err != nil {
+    fmt.Printf("filepath.Walk() returned %v\n", err)
+  }
 }
