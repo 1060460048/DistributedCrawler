@@ -14,8 +14,8 @@ var mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0"
 
 func Scrawler(username, passwd string){
 
-  getFilelist("./data")
-  return
+  //getFilelist("./data")
+  //return
   // get login cookies
   loginCookies := WeiboLogin(username, passwd)
 
