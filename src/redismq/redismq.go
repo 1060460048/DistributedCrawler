@@ -44,12 +44,12 @@ func RunRedisMq(RedisHost string, RedisDB int) {
   for {
     select {
     case <-t.C:
-      readUrlFromMySQL(rmq)
+      readUrlFromMongod(rmq)
     }
   }
 }
 
-func readUrlFromMySQL(rmq *RedisMq) {
+func readUrlFromMongod(rmq *RedisMq) {
   rc := rmq.RedisClient.Get()
   defer rc.Close()
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
