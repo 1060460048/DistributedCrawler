@@ -4,15 +4,23 @@ import (
   "gopkg.in/mgo.v2"
 )
 
-var DB *mgo.Database
+type Mgo struct {
+  MgoClient **mgo.Session
+  MgoHost string
+  MgoDB int
+}
 
 type Url struct {
   Id             bson.ObjectId `bson:"_id"`
 	Url            string        `json:"url"`
 }
 
-func InitDB(connStr, dbName string) *mgo.Session {
-  session, err := mgo.Dial(connStr)
+func InitMgoDB(ConnStr, DBName string) *mgo.Session {
+  mgo := &Mgo{
+    MgoHost : ConnStr
+    MgoDB : DBName
+  }
+  session, err := mgo.Dial(ConnStr)
   if err != nil {
     panic(err)
   }
@@ -20,9 +28,8 @@ func InitDB(connStr, dbName string) *mgo.Session {
 
   //设置模式
   session.SetMode(mgo.Monotonic, true)
-  DB = session.DB(dbName)
   //获取文档集
-  collection := DB.C("urls")
+  collection = session.DB(DBName).C("urls")
   // 创建索引
   index := mgo.Index{
    Key:        []string{"url"}, // 索引字段， 默认升序,若需降序在字段前加-
@@ -34,15 +41,12 @@ func InitDB(connStr, dbName string) *mgo.Session {
      log.Println(err)
      return session
   }
-  if err := collection.EnsureIndexKey("$2dsphere:location"); err != nil { // 创建一个范围索引
-     log.Println(err)
-     return session
-  }
+  mgo.MgoClient = session
   return session
 }
 
-func InsertUrls(urls []Url) (error) {
-  c := DB.C("urls")
+func (mgo *Mgo)InsertUrls(urls []Url) (error) {
+  c := mgo.MgoClient
   for url in urls {
     //添加去重功能
     err := c.Insert(url)
@@ -53,7 +57,8 @@ func InsertUrls(urls []Url) (error) {
   return err
 }
 
-func QueryUrls(topN int) (error, []Url){
+func (mgo *Mgo)QueryUrls(topN int) (error, []Url){
+  c := mgo.MgoClient
   //*****查询多条数据*******
   var urls []Url   //存放结果
   c := DB.C("urls")

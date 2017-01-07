@@ -4,6 +4,7 @@ import (
   "net"
   "net/rpc"
   "fmt"
+  "dscrawl"
   //"container/list"
   //"github.com/mediocregopher/radix.v2/redis"
 )
@@ -12,38 +13,22 @@ type Worker struct {
   l net.Listener
   nRPC int
   nJobs int
-  WorkerAddress string
+  Address string
+  mgosess *mgo.Session
 }
 
-func initWorker(WorkerAddress string, nRPC int) *Worker{
+func initWorker(Address string, nRPC int) *Worker{
   w := new(Worker)
   w.nRPC = nRPC
-  w.WorkerAddress = WorkerAddress
+  w.Address = Address
+  w.mgosess = dscrawl.InitDB
   return w
 }
 
 func RunWorker(masterAddress, workerAddress string, nRPC int) {
   w := initWorker(workerAddress, nRPC)
-  rpcs := rpc.NewServer()
-  rpcs.Register(w)
-  l, e := net.Listen("tcp", w.WorkerAddress)
-  if e != nil {
-		fmt.Println("RunWorker: worker ", w.WorkerAddress, " error: ", e)
-	}
-	w.l = l
-  //add your code here
-  register(masterAddress, w.WorkerAddress)
-  for w.nRPC != 0 {
-		conn, err := w.l.Accept()
-		if err == nil {
-			w.nRPC -= 1
-			go rpcs.ServeConn(conn)
-			w.nJobs += 1
-		} else {
-			break
-		}
-	}
-	w.l.Close()
+  go startRpcServer(w)
+  register(masterAddress, w.Address)
 }
 
 func register(masterAddress, workerAddress string) {
@@ -57,29 +42,43 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
   fmt.Println("DoJob: JobType ", args.JobType)
   switch args.JobType {
   case "Crawl":
-    //getUrlsFromRedis()
-    //DoCrawl(DojobArgs.Url)
-    //addUrlsToMongodb
+    //urls := scrawler.DoCrawl(DojobArgs.Url)
+    //addUrlsToMongodb(w, urls)
   }
   return nil
 }
 
+func addUrlsToMongodb(w *Worker, urls []string){
 
+  defer w.mgo.MgoClient.CLose()
+}
 
-
-/*func addUrlsToMongodb(l list){
-  conn, err := redis.Dial("tcp", "127.0.0.1:6379")
-  defer conn.Close()
-  if err != nil {
-    fmt.Println("Redis connection err: %s", err)
-  }
-  for url := l.Front; url != nil; url = url.Next() {
-    resp := conn.Cmd("RPUSH", "url", url)
-    if resp.Err != nil {
-      fmt.Println("Redis resp err: %s",err)
-    }
-  }
-}*/
+func startRpcServer(w *Worker) {
+  //need code reconstruction
+  rpc.Register(w)
+  rpc.HandleHTTP()
+  err := http.ListenAndServe(w.Address, nil)
+  fmt.Println("RegistrationServer: accept error", err)
+  // rpcs := rpc.NewServer()
+  // rpcs.Register(w)
+  // l, e := net.Listen("tcp", w.Address)
+  // if e != nil {
+	// 	fmt.Println("RunWorker: worker ", w.Address, " error: ", e)
+	// }
+	// w.l = l
+  //add your code here
+  // for w.nRPC != 0 {
+	// 	conn, err := w.l.Accept()
+	// 	if err == nil {
+	// 		w.nRPC -= 1
+	// 		go rpcs.ServeConn(conn)
+	// 		w.nJobs += 1
+	// 	} else {
+	// 		break
+	// 	}
+	// }
+	// w.l.Close()
+}
 
 /*func getUrlsFromRedis() (l list){
   conn, err := redis.Dial("tcp", "127.0.0.1:6379")

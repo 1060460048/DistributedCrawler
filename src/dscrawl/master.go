@@ -36,7 +36,7 @@ func initMaster(dbname, Address string) *Master {
   m.registerChannel = make(chan string)
   m.urlChannel = make(chan string, 100)
   m.workers = make(map[WorkInfo]bool)
-  m.rmp = initRedisMq()
+  m.rmp = InitRedisMq()
   return m
 }
 

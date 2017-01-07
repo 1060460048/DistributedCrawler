@@ -16,7 +16,7 @@ type RedisMq struct {
   RedisDB int
 }
 
-func initRedisMq(RedisHost string, RedisDB int) *RedisMq {
+func InitRedisMq(RedisHost string, RedisDB int) *RedisMq {
   rmq := &RedisMq{
     RedisHost : RedisHost,
     RedisDB : RedisDB,
@@ -38,17 +38,17 @@ func initRedisMq(RedisHost string, RedisDB int) *RedisMq {
     return rmq
 }
 
-func RunRedisMq(RedisHost string, RedisDB int) {
-  rmq := initRedisMq(RedisHost, RedisDB)
-  t := time.NewTicker(60 * time.Second)
-  fmt.Println("RunRedisMq: ", RedisHost, " RedisDB: ", RedisDB)
-  for {
-    select {
-    case <-t.C:
-      readUrlFromMongod(rmq)
-    }
-  }
-}
+// func RunRedisMq(RedisHost string, RedisDB int) {
+//   rmq := InitRedisMq(RedisHost, RedisDB)
+//   t := time.NewTicker(60 * time.Second)
+//   fmt.Println("RunRedisMq: ", RedisHost, " RedisDB: ", RedisDB)
+//   for {
+//     select {
+//     case <-t.C:
+//       readUrlFromMongod(rmq)
+//     }
+//   }
+// }
 
 func (rmq *RedisMq) GetUrls() []string{
   rc := rmq.RedisClient.Get()
