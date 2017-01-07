@@ -57,13 +57,17 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
   fmt.Println("DoJob: JobType ", args.JobType)
   switch args.JobType {
   case "Crawl":
+    //getUrlsFromRedis()
     //DoCrawl(DojobArgs.Url)
-    //DoAddRedis(args.Url)
+    //addUrlsToMongodb
   }
   return nil
 }
 
-/*func DoAddRedis(l list){
+
+
+
+/*func addUrlsToMongodb(l list){
   conn, err := redis.Dial("tcp", "127.0.0.1:6379")
   defer conn.Close()
   if err != nil {
@@ -75,4 +79,19 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
       fmt.Println("Redis resp err: %s",err)
     }
   }
+}*/
+
+/*func getUrlsFromRedis() (l list){
+  conn, err := redis.Dial("tcp", "127.0.0.1:6379")
+  defer conn.Close()
+  if err != nil {
+    fmt.Println("Redis connection err: %s", err)
+  }
+  for url := l.Front; url != nil; url = url.Next() {
+    resp := conn.Cmd("RPUSH", "url", url)
+    if resp.Err != nil {
+      fmt.Println("Redis resp err: %s",err)
+    }
+  }
+  return l
 }*/
