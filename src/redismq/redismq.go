@@ -5,6 +5,7 @@ import (
   //"sync"
   //"net"
   //"net/rpc"
+  "container/list"
   "time"
   "github.com/garyburd/redigo/redis"
 )
@@ -49,13 +50,26 @@ func RunRedisMq(RedisHost string, RedisDB int) {
   }
 }
 
-func readUrlFromMongod(rmq *RedisMq) {
+func (rmq *RedisMq) GetUrls() []string{
   rc := rmq.RedisClient.Get()
   defer rc.Close()
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
-  n, _ := redis.Int(rc.Do("llen", "url"))
-  fmt.Printf("url length in redis: %#v\n", n)
-  if n < 100 {
-    //read
-  }
+  urls, _ := redis.Strings(c.Do("lrange", "url", "0", "100"))
+  fmt.Printf("get urls from redis: " + urls)
+  // if len(urls) < 100 then load data from mongodb
+  // loadDataFromMongod()
+  return urls
+}
+
+func (rmq *RedisMq) PushUrls(urls []string) {
+  rc := rmq.RedisClient.Get()
+  defer rc.Close()
+  //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
+  // for url := l.Front; url != nil; url = url.Next() {
+  rc.Do("lpush", "url", urls)
+  // }
+}
+
+func (rmq *RedisMq) LoadDataFromMongod(lengthName string) {
+  
 }

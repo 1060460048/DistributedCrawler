@@ -15,7 +15,7 @@ import (
 // 3) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
 func main() {
   if len(os.Args) != 4 {
-		segment.Segment()
+		// segment.Segment()
 		//scrawler.Scrawler()
     fmt.Printf("%s: see usage comments in file\n", os.Args[0])
   } else if os.Args[1] == "master" {

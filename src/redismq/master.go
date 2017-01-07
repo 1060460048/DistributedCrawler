@@ -13,34 +13,38 @@ import (
 type Master struct {
   dbname string
   //dbstring string
-  MasterAddress string
-  l               net.Listener
-  alive           bool
+  Address string
+  // l               net.Listener
+  // alive           bool
   registerChannel chan string
   workDownChnanel chan string
+  readUrlsChannel chan bool
   urlChannel chan string
   workers map[WorkInfo]bool
+  rmq *RedisMq
 }
 
 type WorkInfo struct {
   workAddr string
 }
 
-func initMaster(dbname, MasterAddress string) *Master {
+func initMaster(dbname, Address string) *Master {
   m := &Master{}
   m.dbname = dbname
-  m.MasterAddress = MasterAddress
-  m.alive = true
+  m.Address = Address
+  // m.alive = true
   m.registerChannel = make(chan string)
-  m.urlChannel = make(chan string)
+  m.urlChannel = make(chan string, 100)
   m.workers = make(map[WorkInfo]bool)
+  m.rmp = initRedisMq()
   return m
 }
 
 func RunMaster(dbname, mr string) {
   m := initMaster(dbname, mr)
   go startRpcServer(m)
-  go RunRedisMq(dbname, 0)
+  go loadUrlsFromRedis(m)
+  // go RunRedisMq(dbname, 0)
   fmt.Println("Master has run: ", mr)
   for {
     select {
@@ -48,22 +52,50 @@ func RunMaster(dbname, mr string) {
       work := WorkInfo{workAddr : workAddr}
       m.workers[work] = true;
       fmt.Println("Register worker: ", work.workAddr)
-      DispatchJob(work)
+      go dispatchJob(work, m)
     case workAddr := <-m.workDownChnanel:
       work := WorkInfo{workAddr : workAddr}
       m.workers[work] = true;
       fmt.Println("WorkDown worker: ", work.workAddr)
-      DispatchJob(work)
-    }
+      go dispatchJob(work, m)
+    // case <-m.readUrlsChannel:
+    //   loadUrlsToRedis(m)
+    // }
   }
 }
 
-func DispatchJob(workInfo WorkInfo) {
+/*
+ * this function is likely a consumer.
+ */
+func dispatchJob(workInfo WorkInfo, m Master) {
+  urls := []
+  for i:= 0;i < 10;i++ {
+    url <- m.urlChannel // get ulr from channel
+    urls = append(urls, url)
+  }
+  m.workers[workInfo] = false;
   args := new(DojobArgs)
-  args.Url = "www.baidu.com"//url
-  args.JobType = "hehe"
+  // args.Url = "www.baidu.com"//url
+  args.JobType = "Crawl"
+  args.Urls = urls
   var reply DojobReply
   call(workInfo.workAddr, "Worker.Dojob", args, &reply)
+}
+
+/*
+ * this function is likely a producter.
+ */
+func loadUrlsFromRedis(m Master) {
+  //1) load Data
+  //2) dispatchjob
+  // When finish you need dispatchjob for
+  // every blocked work because of none data in redis
+  for {
+    urls := m.rmq.GetUrls()
+    for i, v := range urls {
+      m.urlChannel <- v
+    }
+  }
 }
 
 func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
@@ -79,60 +111,6 @@ func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
 func startRpcServer(m *Master) {
   rpc.Register(m)
   rpc.HandleHTTP()
-  err := http.ListenAndServe(m.MasterAddress, nil)
+  err := http.ListenAndServe(m.Address, nil)
   fmt.Println("RegistrationServer: accept error", err)
-  /*rpcs := rpc.NewServer()
-  rpcs.Register(m)
-  l, e := net.Listen("tcp", m.MasterAddress)
-  if e != nil {
-		fmt.Println("RegstrationServer", m.MasterAddress, " error: ", e)
-	}
-	m.l = l
-  // now that we are listening on the master address, can fork off
-	// accepting connections to another thread.
-	go func() {
-		for m.alive {
-			conn, err := m.l.Accept()
-			if err == nil {
-				go rpcs.ServeConn(conn)
-			} else {
-				fmt.Println("RegistrationServer: accept error", err)
-				break
-			}
-      conn.Close()
-		}
-		fmt.Println("RegistrationServer: done\n")
-	}()*/
 }
-
-/*func DispatchUrl(m *Master) {
-  conn, err := redis.Dial("tcp", "127.0.0.1:6379")
-  defer conn.Close()
-  if err != nil {
-    fmt.Println("Redis connection err: %s", err)
-  }
-
-  go func (){
-    for {
-      // resp := conn.Cmd("HMSET", "album:1", "title", "Electric Ladyland", "artist", "Jimi Hendrix", "price", 4.95, "likes", 8)
-      // // Check the Err field of the *Resp object for any errors.
-      // if resp.Err != nil {
-      //     log.Fatal(resp.Err)
-      // }
-      //
-      // fmt.Println("Electric Ladyland added!")
-      select{
-      case workerAddr:= <-m.workDownChnanel:
-        url, err := conn.Cmd("BLPOP", "url", 0).Str()
-        if err != nil {
-          fmt.Println(err)
-        }
-        args := new(DojobArgs)
-        args.Url = url
-        var reply DojobReply
-        ok := call(workerAddr, "Worker.Dojob", args, &reply)
-      }
-    }
-  }()
-
-}*/
