@@ -71,5 +71,6 @@ func (rmq *RedisMq) PushUrls(urls []string) {
 }
 
 func (rmq *RedisMq) LoadDataFromMongod(lengthName string) {
-  
+  //1) queru 1000 urls from mongodb
+  //2) push urls to redismq
 }

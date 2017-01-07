@@ -8,7 +8,7 @@ var DB *mgo.Database
 
 type Url struct {
   Id             bson.ObjectId `bson:"_id"`
-	Url         string        `json:"url"`
+	Url            string        `json:"url"`
 }
 
 func InitDB(connStr, dbName string) *mgo.Session {
