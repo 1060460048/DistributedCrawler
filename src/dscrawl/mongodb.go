@@ -5,7 +5,7 @@ import (
 )
 
 type Mgo struct {
-  MgoClient **mgo.Session
+  MgoClient *mgo.Session
   MgoHost string
   MgoDB int
 }
@@ -45,11 +45,13 @@ func InitMgoDB(ConnStr, DBName string) *mgo.Session {
   return session
 }
 
-func (mgo *Mgo)InsertUrls(urls []Url) (error) {
+func (mgo *Mgo)InsertUrls(urls []string) (error) {
   c := mgo.MgoClient
   for url in urls {
-    //添加去重功能
-    err := c.Insert(url)
+    tmp := &Url{
+      Url : url
+    }
+    err := c.Insert(tmp)
     if err != nil {
       break
     }
