@@ -20,8 +20,9 @@ func Scrawler(username, passwd string){
   loginCookies := WeiboLogin(username, passwd)
 
   mUrl := make(map[string]string)
-  for i := 1; i < 168; i++ {
-    mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0?pids=Pl_Core_F4RightUserList__4&page=" + strconv.Itoa(i) + "#Pl_Core_F4RightUserList__4"
+  for i := 1; i < 151; i++ {
+    // mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0?pids=Pl_Core_F4RightUserList__4&page=" + strconv.Itoa(i) + "#Pl_Core_F4RightUserList__4"
+    mstartUrl = "http://d.weibo.com/1087030002_2975_2006_0?page=" + strconv.Itoa(i) + "#Pl_Core_F4RightUserList__4"
     mstartResp, _ := DoRequest(`GET`, mstartUrl, ``, loginCookies, ``, header)
     //fmt.Println(mstartResp)
     //resp make '\' as string so we shou add '\\' in regex and one blank become two blanks so be carefully
