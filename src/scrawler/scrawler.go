@@ -10,12 +10,17 @@ import (
   "path/filepath"
 )
 
+func Scrawler(cookie string, urls []string){
+  // get login cookies
+  //loginCookies := WeiboLogin(username, passwd)
+  for _, url := range urls {
+    Downloader()
+  }
+}
+
 var mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0"
 
-func Scrawler(username, passwd string){
-
-  //getFilelist("./data")
-  //return
+func ScrawlerBak(username, passwd string){
   // get login cookies
   loginCookies := WeiboLogin(username, passwd)
 
