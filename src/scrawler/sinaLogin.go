@@ -61,6 +61,7 @@ func WeiboLogin(username, passwd string) string{
 	//进入个人主页
 	//entryHome(homeUrl, loginCookies)
 	//抓取个首页
+	fmt.Println("======getCookies success")
 	return loginCookies
 }
 
