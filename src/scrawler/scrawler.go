@@ -14,7 +14,7 @@ func Scrawler(cookie string, urls []string){
   // get login cookies
   //loginCookies := WeiboLogin(username, passwd)
   for _, url := range urls {
-    Downloader()
+    Downloader(cookie, url)
   }
 }
 

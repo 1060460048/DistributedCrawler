@@ -1,4 +1,4 @@
-package redismq
+package distribute
 
 import "fmt"
 import "net/rpc"

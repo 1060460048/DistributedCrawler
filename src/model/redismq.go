@@ -1,4 +1,4 @@
-package redismq
+package model
 
 import (
   "fmt"

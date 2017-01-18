@@ -1,4 +1,4 @@
-package redismq
+package distribute
 
 import (
   "gopkg.in/mgo.v2"
