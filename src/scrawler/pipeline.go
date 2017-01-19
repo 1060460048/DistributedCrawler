@@ -7,17 +7,21 @@ package scrawler
 
 import (
   "fmt"
+  "model"
 )
 
 
-type Item struct {
-  name string
-  sex  string
-  habbit []string
-  //define by yourself...
-}
+// type Item struct {
+//   name string
+//   sex  string
+//   habbit []string
+//   //define by yourself...
+// }
 
 func Pipeline(urls, items []string) {
-  fmt.Printf("Downloader======")
+  fmt.Printf("Pipeline======")
+  mgo := model.InitMgoDB()
+  mgo.InsertUrls(urls)
+  defer mgo.MgoClient.Close()
   //write urls and your data to mongodb and send finish signal to master
 }

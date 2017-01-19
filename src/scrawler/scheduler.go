@@ -16,7 +16,10 @@
    //define by yourself...
  }
 
- func Scheduler(urls, items []string) {
-   fmt.Printf("Downloader======")
-   //write urls and your data to mongodb and send finish signal to master
+ func Scheduler(cookie string, urls []string) {
+   fmt.Printf("Scheduler======")
+   //do something for urls
+   for _, url := range urls {
+     Downloader(cookie, url)
+   }
  }

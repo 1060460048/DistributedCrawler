@@ -15,6 +15,14 @@ type Url struct {
 	Url            string        `json:"url"`
 }
 
+type Item struct {
+  id              bson.ObjectId `bson:"_id"`
+  name string     bson.ObjectId `bson:"name"`
+  sex  string     bson.ObjectId `bson:"sex"`
+  habbit []string bson.ObjectId `bson:"habbit"`
+  //define by yourself...
+}
+
 func InitMgoDB(ConnStr, DBName string) *mgo.Session {
   mgo := &Mgo{
     MgoHost : ConnStr
@@ -42,7 +50,7 @@ func InitMgoDB(ConnStr, DBName string) *mgo.Session {
      return session
   }
   mgo.MgoClient = session
-  return session
+  return mgo
 }
 
 func (mgo *Mgo)InsertUrls(urls []string) (error) {

@@ -13,9 +13,7 @@ import (
 func Scrawler(cookie string, urls []string){
   // get login cookies
   //loginCookies := WeiboLogin(username, passwd)
-  for _, url := range urls {
-    Downloader(cookie, url)
-  }
+  Scheduler(cookie, urls)
 }
 
 var mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0"

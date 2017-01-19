@@ -12,7 +12,7 @@ type Worker struct {
   // nRPC int
   // nJobs int
   Address string
-  mgosess *mgo.Session
+  // mgosess *mgo.Session
   addUrlChannel chan bool
 }
 
@@ -20,7 +20,7 @@ func initWorker(Address string, nRPC int) *Worker{
   w := &Worker{}
   // w.nRPC = nRPC
   w.Address = Address
-  w.mgosess = dscrawl.InitDB
+  // w.mgosess = dscrawl.InitDB()
   w.addUrlChannel = make(chan bool)
   return w
 }
@@ -29,13 +29,13 @@ func RunWorker(masterAddress, workerAddress string, nRPC int) {
   w := initWorker(workerAddress, nRPC)
   go startRpcServer(w)
   register(masterAddress, w.Address)
-  for {
-    select {
-    case: <- addUrlChannel
-      addUrlsToMongodb()
-    }
-  }
-  defer w.mgo.MgoClient.Close()
+  // for {
+  //   select {
+  //   case: <- addUrlChannel
+  //     addUrlsToMongodb()
+  //   }
+  // }
+  // defer w.mgo.MgoClient.Close()
 }
 
 func register(masterAddress, workerAddress string) {
@@ -60,9 +60,9 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
   return nil
 }
 
-func addUrlsToMongodb(w *Worker, urls []string){
-  w.mgo.InsertUrls(urls)
-}
+// func addUrlsToMongodb(w *Worker, urls []string){
+//   w.mgo.InsertUrls(urls)
+// }
 
 func startRpcServer(w *Worker) {
   //need code reconstruction
