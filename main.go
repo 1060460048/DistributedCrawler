@@ -5,7 +5,7 @@ import (
 	//"net/http"
 	//"log"
 	"os"
-	"dscrawl"
+	"distribute"
 	//"scrawler"
 	"segment"
 )
@@ -22,12 +22,12 @@ func main() {
     if os.Args[3] == "sequential" {
       //redismq.RunSingle(5, 3, os.Args[2], Map, Reduce)
     } else {
-      dscrawl.RunMaster(os.Args[2], os.Args[3])
+      distribute.RunMaster(os.Args[2], os.Args[3])
       // Wait until MR is done
       //<- mr.DoneChannel
     }
   } else {
-    dscrawl.RunWorker(os.Args[2], os.Args[3], 100)
+    distribute.RunWorker(os.Args[2], os.Args[3], 100)
   }
 }
 

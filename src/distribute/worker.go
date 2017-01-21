@@ -4,7 +4,6 @@ import (
   "net"
   "net/rpc"
   "fmt"
-  "dscrawl"
 )
 
 type Worker struct {
