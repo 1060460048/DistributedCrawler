@@ -13,10 +13,11 @@ import (
   "os"
   "bufio"
   "path/filepath"
+  "model"
 )
 
 func Spider(resp string) {
-  var item &Item{}
+  var item &model.Item{}
   var urls []string
   //your code your reg you extraction rules and so on
   urls = extractUrls(resp)

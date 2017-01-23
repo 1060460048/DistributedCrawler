@@ -10,7 +10,7 @@ import (
 
 func Downloader(cookie, url string) {
   resp, _ := DoRequest(`GET`, url, ``, cookie, ``, header)
-  fmt.Printf("Downloader======")
+  fmt.Printf("Downloader finish url:" + url)
   Spider(resp)
   //return resp
 }
