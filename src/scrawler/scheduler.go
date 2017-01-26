@@ -20,6 +20,6 @@
    fmt.Printf("Scheduler======")
    //do something for urls maybe use some threads go func() to opti
    for _, url := range urls {
-     go Downloader(cookie, url)
+     Downloader(cookie, url)
    }
  }

@@ -79,3 +79,24 @@ func getFilelist(path string) {
     fmt.Printf("filepath.Walk() returned %v\n", err)
   }
 }
+
+func ReadLine(fileName string) ([]string, error) {
+	f, err := os.Open(fileName)
+	if err != nil {
+		return err
+	}
+	buf := bufio.NewReader(f)
+  var urls
+	for {
+		line, err := buf.ReadString('\n')
+		line = strings.TrimSpace(line)
+    append(urls, line)
+		if err != nil {
+			if err == io.EOF {
+				return urls, nil
+			}
+			return nil, err
+		}
+	}
+	return urls, nil
+}

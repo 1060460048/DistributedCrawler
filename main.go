@@ -6,7 +6,7 @@ import (
 	//"log"
 	"os"
 	"distribute"
-	//"scrawler"
+	"scrawler"
 	"segment"
 )
 // Can be run in 3 ways:
@@ -16,7 +16,7 @@ import (
 func main() {
   if len(os.Args) != 4 {
 		// segment.Segment()
-		//scrawler.Scrawler()
+		scrawler.Scrawler()
     fmt.Printf("%s: see usage comments in file\n", os.Args[0])
   } else if os.Args[1] == "master" {
     if os.Args[3] == "sequential" {
