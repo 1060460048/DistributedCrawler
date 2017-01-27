@@ -7,7 +7,7 @@ import (
 	"os"
 	"distribute"
 	"scrawler"
-	"segment"
+	// "segment"
 )
 // Can be run in 3 ways:
 // 1) Scrawler (e.g., go run main.go master x.txt sequential)

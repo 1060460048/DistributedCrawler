@@ -1,13 +1,16 @@
 package model
 
 import (
+  "fmt"
   "gopkg.in/mgo.v2"
+  "gopkg.in/mgo.v2/bson"
 )
 
 type Mgo struct {
-  MgoClient *mgo.Session
+  Session *mgo.Session
+  DB      *mgo.Database
   MgoHost string
-  MgoDB int
+  MgoDB   string
 }
 
 type Url struct {
@@ -17,16 +20,16 @@ type Url struct {
 
 type Item struct {
   id              bson.ObjectId `bson:"_id"`
-  name string     bson.ObjectId `bson:"name"`
-  sex  string     bson.ObjectId `bson:"sex"`
-  habbit []string bson.ObjectId `bson:"habbit"`
+  name            string        `bson:"name"`
+  sex             string        `bson:"sex"`
+  habbit          []string      `bson:"habbit"`
   //define by yourself...
 }
 
-func InitMgoDB(ConnStr, DBName string) *mgo.Session {
-  mgo := &Mgo{
-    MgoHost : ConnStr
-    MgoDB : DBName
+func InitMgoDB(ConnStr, DBName string) *Mgo {
+  mgoClient := &Mgo{
+    MgoHost : ConnStr,
+    MgoDB : DBName,
   }
   session, err := mgo.Dial(ConnStr)
   if err != nil {
@@ -37,7 +40,7 @@ func InitMgoDB(ConnStr, DBName string) *mgo.Session {
   //设置模式
   session.SetMode(mgo.Monotonic, true)
   //获取文档集
-  collection = session.DB(DBName).C("urls")
+  c := session.DB(DBName).C("urls")
   // 创建索引
   index := mgo.Index{
    Key:        []string{"url"}, // 索引字段， 默认升序,若需降序在字段前加-
@@ -45,21 +48,26 @@ func InitMgoDB(ConnStr, DBName string) *mgo.Session {
    DropDups:   true,             // 索引重复替换旧文档,Unique为true时失效
    Background: true,             // 后台创建索引
   }
-  if err := collection.EnsureIndex(index); err != nil {
-     log.Println(err)
-     return session
+  if err := c.EnsureIndex(index); err != nil {
+     fmt.Println(err)
+     return nil
   }
-  mgo.MgoClient = session
-  return mgo
+  mgoClient.DB = session.DB(DBName)
+  mgoClient.Session = session
+  return mgoClient
 }
 
-func (mgo *Mgo)InsertUrls(urls []string) (error) {
-  c := mgo.MgoClient
-  for url in urls {
+func (mgo *Mgo)Close(){
+  mgo.Session.Close()
+}
+
+func (mgo *Mgo)InsertUrls(urls []string) (err error) {
+  c := mgo.DB.C("urls")
+  for _, url := range urls {
     tmp := &Url{
-      Url : url
+      Url : url,
     }
-    err := c.Insert(tmp)
+    err = c.Insert(tmp)
     if err != nil {
       break
     }
@@ -68,10 +76,9 @@ func (mgo *Mgo)InsertUrls(urls []string) (error) {
 }
 
 func (mgo *Mgo)QueryUrls(topN int) (error, []Url){
-  c := mgo.MgoClient
   //*****查询多条数据*******
   var urls []Url   //存放结果
-  c := DB.C("urls")
+  c := mgo.DB.C("urls")
   iter := c.Find(nil).Limit(topN).Iter()
   err := iter.All(&urls)
   return err, urls

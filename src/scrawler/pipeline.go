@@ -18,10 +18,10 @@ import (
 //   //define by yourself...
 // }
 
-func Pipeline(urls, items []string) {
+func Pipeline(urls []string, items *model.Item) {
   fmt.Printf("Pipeline======")
-  mgo := model.InitMgoDB()
+  mgo := model.InitMgoDB("conn", "urls")
   mgo.InsertUrls(urls)
-  defer mgo.MgoClient.Close()
+  defer mgo.Session.Close()
   //write urls and your data to mongodb and send finish signal to master
 }

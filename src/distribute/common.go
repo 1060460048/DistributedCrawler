@@ -5,20 +5,20 @@ import "net/rpc"
 
 type DojobArgs struct {
 	// Job string
-	JobType string
-	Url string
+	JobType 	string
+	Urls 			[]string
 }
 
 type DojobReply struct {
-	OK bool
+	OK 				bool
 }
 
 type RegisterArgs struct {
-	Worker string
+	Worker 		string
 }
 
 type RegisterReply struct {
-	OK bool
+	OK 				bool
 }
 
 //

@@ -50,18 +50,18 @@ func WeiboLogin(username, passwd string) string{
   loginUrl := `http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)`
   // form data params
   strParams := buildParems(su, sp, cgi, loginInfo)
-  _, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
-  //loginResp, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
+  //_, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
+  loginResp, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
   //请求passport
-	//passportResp, _ := callPassport(loginResp, strCookies+";"+loginCookies)
+	passportResp, _ := callPassport(loginResp, strCookies+";"+loginCookies)
   //fmt.Println(passportResp)
-	//uniqueid := MatchData(passportResp, `"uniqueid":"(.*?)"`)
-	//homeUrl := "http://weibo.com/u/" + uniqueid + "/home?topnav=1&wvr=6"
+	uniqueid := MatchData(passportResp, `"uniqueid":"(.*?)"`)
+	homeUrl := "http://weibo.com/u/" + uniqueid + "/home?topnav=1&wvr=6"
 
 	//进入个人主页
 	//entryHome(homeUrl, loginCookies)
 	//抓取个首页
-	fmt.Println("======getCookies success")
+	fmt.Println(homeUrl)
 	return loginCookies
 }
 
@@ -162,9 +162,10 @@ func buildParems(su, sp, captcha string, loginInfo map[string]interface{}) strin
 
 //获取passport并请求
 func callPassport(resp, cookies string) (passresp, passcookies string) {
-  fmt.Println("======callPassport")
+
 	//提取passport跳转地址
-	passportUrl := RegexFind(resp, `location.replace\(\'(.*?)\'\)`)
+	passportUrl := RegexFind(resp, `location.replace\(\"(.*?)\"\)`)
+	fmt.Println("callPassport "+ passportUrl + resp)
 	passresp, passcookies = DoRequest(`GET`, passportUrl, ``, cookies, ``, header)
 	return
 }

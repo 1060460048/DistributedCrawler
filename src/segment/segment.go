@@ -51,7 +51,7 @@ func segLine(line string) {
   words = x.Cut(line, use_hmm)
   //fmt.Println(line)
   fmt.Println("精确模式:", strings.Join(words, "/"))
-  for i, v := range words {
+  //for i, v := range words {
     //build dictory
-  }
+  //}
 }

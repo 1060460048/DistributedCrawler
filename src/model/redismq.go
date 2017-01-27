@@ -2,10 +2,6 @@ package model
 
 import (
   "fmt"
-  //"sync"
-  //"net"
-  //"net/rpc"
-  "container/list"
   "time"
   "github.com/garyburd/redigo/redis"
 )
@@ -22,20 +18,20 @@ func InitRedisMq(RedisHost string, RedisDB int) *RedisMq {
     RedisDB : RedisDB,
   }
   rmq.RedisClient = &redis.Pool{
-      MaxIdle:     1,
-  		MaxActive:   10,
-  		IdleTimeout: 180 * time.Second,
-  		Dial: func() (redis.Conn, error) {
-  			c, err := redis.Dial("tcp", rmq.RedisHost)
-  			if err != nil {
-  				return nil, err
-  			}
-  			// 选择db
-  			c.Do("SELECT", rmq.RedisDB)
-  			return c, nil
-  		},
-    }
-    return rmq
+    MaxIdle:     1,
+		MaxActive:   10,
+		IdleTimeout: 180 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", rmq.RedisHost)
+			if err != nil {
+				return nil, err
+			}
+			// 选择db
+			c.Do("SELECT", rmq.RedisDB)
+			return c, nil
+		},
+  }
+  return rmq
 }
 
 // func RunRedisMq(RedisHost string, RedisDB int) {
@@ -54,8 +50,10 @@ func (rmq *RedisMq) GetUrls() []string{
   rc := rmq.RedisClient.Get()
   defer rc.Close()
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
-  urls, _ := redis.Strings(c.Do("lrange", "url", "0", "100"))
-  fmt.Printf("get urls from redis: " + urls)
+  urls, _ := redis.Strings(rc.Do("lrange", "url", "0", "100"))
+  for _, url := range urls {
+    fmt.Printf("get urls from redis: " + url)
+  }
   // if len(urls) < 100 then load data from mongodb
   // loadDataFromMongod()
   return urls

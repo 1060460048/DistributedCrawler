@@ -6,6 +6,7 @@ import (
   "strconv"
   "strings"
   "os"
+  "io"
   "bufio"
   "path/filepath"
 )
@@ -83,14 +84,15 @@ func getFilelist(path string) {
 func ReadLine(fileName string) ([]string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
-		return err
+    fmt.Println("open file err")
+		return nil, err
 	}
 	buf := bufio.NewReader(f)
-  var urls
+  var urls []string
 	for {
 		line, err := buf.ReadString('\n')
 		line = strings.TrimSpace(line)
-    append(urls, line)
+    urls = append(urls, line)
 		if err != nil {
 			if err == io.EOF {
 				return urls, nil

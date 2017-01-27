@@ -3,25 +3,26 @@ package distribute
 import (
   "fmt"
   //"sync"
-  "net"
+  // "net"
   "net/rpc"
   "net/http"
   //"github.com/mediocregopher/radix.v2/redis"
-  //"github.com/garyburd/redigo/redis"
+  // "github.com/garyburd/redigo/redis"
+  "model"
 )
 
 type Master struct {
-  dbname string
+  dbname              string
   //dbstring string
-  Address string
+  Address             string
   // l               net.Listener
   // alive           bool
-  registerChannel chan string
-  workDownChnanel chan string
-  readUrlsChannel chan bool
-  urlChannel chan string
-  workers map[WorkInfo]bool
-  rmq *RedisMq
+  registerChannel     chan string
+  workDownChnanel     chan string
+  readUrlsChannel     chan bool
+  urlChannel          chan string
+  workers             map[WorkInfo]bool
+  rmq                 *model.RedisMq
 }
 
 type WorkInfo struct {
@@ -36,13 +37,13 @@ func initMaster(dbname, Address string) *Master {
   m.registerChannel = make(chan string)
   m.urlChannel = make(chan string, 100)
   m.workers = make(map[WorkInfo]bool)
-  m.rmp = InitRedisMq()
+  m.rmq = model.InitRedisMq("aaa", 1)
   return m
 }
 
 func RunMaster(dbname, mr string) {
   m := initMaster(dbname, mr)
-  go startRpcServer(m)
+  go startRpcMaster(m)
   go loadUrlsFromRedis(m)
   // go RunRedisMq(dbname, 0)
   fmt.Println("Master has run: ", mr)
@@ -60,21 +61,21 @@ func RunMaster(dbname, mr string) {
       go dispatchJob(work, m)
     // case <-m.readUrlsChannel:
     //   loadUrlsToRedis(m)
-    // }
+    }
   }
 }
 
 /*
  * this function is likely a consumer.
  */
-func dispatchJob(workInfo WorkInfo, m Master) {
-  urls := []
+func dispatchJob(workInfo WorkInfo, m *Master) {
+  var urls []string
   for i:= 0;i < 10;i++ {
-    url <- m.urlChannel // get ulr from channel
+    url := <- m.urlChannel // get ulr from channel
     urls = append(urls, url)
   }
   m.workers[workInfo] = false;
-  args := new(DojobArgs)
+  args := &DojobArgs{}
   // args.Url = "www.baidu.com"//url
   args.JobType = "Crawl"
   args.Urls = urls
@@ -85,14 +86,14 @@ func dispatchJob(workInfo WorkInfo, m Master) {
 /*
  * this function is likely a producter.
  */
-func loadUrlsFromRedis(m Master) {
+func loadUrlsFromRedis(m *Master) {
   //1) load Data
   //2) dispatchjob
   // When finish you need dispatchjob for
   // every blocked work because of none data in redis
   for {
     urls := m.rmq.GetUrls()
-    for i, v := range urls {
+    for _, v := range urls {
       m.urlChannel <- v
     }
   }
@@ -108,7 +109,7 @@ func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
    m.workDownChnanel <- args.Worker
 }*/
 
-func startRpcServer(m *Master) {
+func startRpcMaster(m *Master) {
   rpc.Register(m)
   rpc.HandleHTTP()
   err := http.ListenAndServe(m.Address, nil)

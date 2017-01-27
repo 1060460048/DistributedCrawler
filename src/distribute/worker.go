@@ -1,17 +1,13 @@
 package distribute
 
 import (
-  "net"
   "net/rpc"
+  "net/http"
   "fmt"
 )
 
 type Worker struct {
-  // l net.Listener
-  // nRPC int
-  // nJobs int
   Address string
-  // mgosess *mgo.Session
   addUrlChannel chan bool
 }
 
@@ -26,7 +22,7 @@ func initWorker(Address string, nRPC int) *Worker{
 
 func RunWorker(masterAddress, workerAddress string, nRPC int) {
   w := initWorker(workerAddress, nRPC)
-  go startRpcServer(w)
+  go startRpcWorker(w)
   register(masterAddress, w.Address)
   // for {
   //   select {
@@ -63,7 +59,7 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
 //   w.mgo.InsertUrls(urls)
 // }
 
-func startRpcServer(w *Worker) {
+func startRpcWorker(w *Worker) {
   //need code reconstruction
   rpc.Register(w)
   rpc.HandleHTTP()

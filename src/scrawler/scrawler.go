@@ -5,17 +5,21 @@ import (
   "regexp"
   "strconv"
   "strings"
-  "os"
-  "bufio"
-  "path/filepath"
+  // "os"
+  // "bufio"
+  // "path/filepath"
 )
 
-func Scrawler(cookie string, urls []string){
+// func Scrawler(cookie string, urls []string){
+func Scrawler(){
   // get login cookies
-  cookie = WeiboLogin(username, passwd)
-  urls = ReadLine("./data/mstarturlname.map")
+  cookie := WeiboLogin("username", "passwd")
+  urls, err := ReadLine("./data/mstarturlname.map")
+  if err != nil {
+    fmt.Println("ReadLine error")
+    return
+  }
   Scheduler(cookie, urls)
-
 }
 
 var mstartUrl = "http://d.weibo.com/1087030002_2975_1003_0"
