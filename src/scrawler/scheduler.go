@@ -7,6 +7,7 @@
 
  import (
    "fmt"
+  //  "strings"
  )
 
  type Item struct {
@@ -17,9 +18,12 @@
  }
 
  func Scheduler(cookie string, urls []string) {
-   fmt.Printf("Scheduler======")
+   //Pipeline(urls, nil)
+   fmt.Printf("Scheduler")
    //do something for urls maybe use some threads go func() to opti
-   for _, url := range urls {
-     Downloader(cookie, url)
-   }
+  //  for _, url := range urls {
+  //    tmp := strings.Split(url, "^")
+  //    str := strings.Replace(tmp[1], "weibo.com", "weibo.cn", -1)
+  //    Downloader(cookie, str)
+  //  }
  }

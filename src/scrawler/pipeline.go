@@ -19,9 +19,11 @@ import (
 // }
 
 func Pipeline(urls []string, items *model.Item) {
-  fmt.Printf("Pipeline======")
-  mgo := model.InitMgoDB("conn", "urls")
-  mgo.InsertUrls(urls)
+
+  mgo := model.InitMgoDB("localhost", "urls")
   defer mgo.Session.Close()
+  mgo.InsertUrls(urls)
+
+  fmt.Printf("Pipeline======")
   //write urls and your data to mongodb and send finish signal to master
 }

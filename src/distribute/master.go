@@ -29,20 +29,26 @@ type WorkInfo struct {
   workAddr string
 }
 
-func initMaster(dbname, Address string) *Master {
-  m := &Master{}
+func initMaster(dbname, Address string) (m *Master, err error) {
+  m = &Master{}
   m.dbname = dbname
   m.Address = Address
   // m.alive = true
   m.registerChannel = make(chan string)
   m.urlChannel = make(chan string, 100)
   m.workers = make(map[WorkInfo]bool)
-  m.rmq = model.InitRedisMq("aaa", 1)
-  return m
+  m.rmq, err = model.InitRedisMq("aaa", 1)
+  return m, err
 }
 
 func RunMaster(dbname, mr string) {
-  m := initMaster(dbname, mr)
+  m, err := initMaster(dbname, mr)
+  if err != nil {
+    fmt.Println("initMaster error: " + err.Error())
+    return
+  }
+  defer m.rmq.C.Close()
+
   go startRpcMaster(m)
   go loadUrlsFromRedis(m)
   // go RunRedisMq(dbname, 0)

@@ -65,10 +65,12 @@ func (mgo *Mgo)InsertUrls(urls []string) (err error) {
   c := mgo.DB.C("urls")
   for _, url := range urls {
     tmp := &Url{
+      Id : bson.NewObjectId(),
       Url : url,
     }
     err = c.Insert(tmp)
     if err != nil {
+      fmt.Println("insert error"+ err.Error())
       break
     }
   }
