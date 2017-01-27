@@ -12,6 +12,10 @@ import (
   "encoding/json"
   "bufio"
   "strconv"
+
+	"bytes"
+"io"
+"time"
 )
 
 var header = map[string]string{
@@ -40,21 +44,24 @@ func WeiboLogin(username, passwd string) string{
 
   // is need cgi or not
   var cgi string
-  if loginInfo["showpin"] == 1 {
-    inputDone := make (chan string)
-    go inputcgi(inputDone)
-    cgi = <- inputDone
+  if loginInfo["showpin"].(float64) == 1 {
+		saveCaptcha(loginInfo["pcid"].(string), strCookies)
+		reader := bufio.NewReader(os.Stdin)
+		//for {
+		fmt.Println("waiting for input captcha...")
+		data, _, _ := reader.ReadLine()
+		cgi = string(data)
   }
-
   // Do login POST
   loginUrl := `http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)`
   // form data params
   strParams := buildParems(su, sp, cgi, loginInfo)
   //_, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
   loginResp, loginCookies := DoRequest(`POST`, loginUrl, strParams, strCookies, ``, header)
+	fmt.Println(loginResp)
   //请求passport
 	passportResp, _ := callPassport(loginResp, strCookies+";"+loginCookies)
-  //fmt.Println(passportResp)
+  fmt.Println(passportResp)
 	uniqueid := MatchData(passportResp, `"uniqueid":"(.*?)"`)
 	homeUrl := "http://weibo.com/u/" + uniqueid + "/home?topnav=1&wvr=6"
 
@@ -68,9 +75,10 @@ func WeiboLogin(username, passwd string) string{
 func inputcgi(inputDone chan string){
   reader := bufio.NewReader(os.Stdin)
   //for {
-  fmt.Println("waiting for input captcha...")
-  data, _, _ := reader.ReadLine()
-  inputDone <- string(data)
+	  fmt.Println("waiting for input captcha...")
+	  data, _, _ := reader.ReadLine()
+		fmt.Println("cmd " + string(data))
+	  inputDone <- string(data)
   //}
 }
 
@@ -82,7 +90,6 @@ func inputcgi(inputDone chan string){
  *
  */
 func encryptPassword(loginInfo map[string]interface{}, password string) string {
-  fmt.Println("======encryptPassword")
   z := new(big.Int)
 	z.SetString(loginInfo["pubkey"].(string), 16)
 	pub := rsa.PublicKey{
@@ -98,7 +105,6 @@ func encryptPassword(loginInfo map[string]interface{}, password string) string {
  * open main page and you should get cookie and save
  */
  func getCookies() string{
-   fmt.Println("======getCookies")
    loginUrl := `http://weibo.com/login.php`
    _, strCookies := DoRequest(`GET`, loginUrl, ``, ``, ``, nil)
    return strCookies
@@ -146,7 +152,7 @@ func getPreLogin(su string) map[string]interface{} {
  * returntype:META
  */
 func buildParems(su, sp, captcha string, loginInfo map[string]interface{}) string {
-  fmt.Println("======buildParems")
+
   strParams := "entry=weibo&gateway=1&from=&savestate=7&useticket=1&pagerefer=&vsnf=1&su=" +
   su + "&service=miniblog&servertime=" + strconv.Itoa(int(loginInfo["servertime"].(float64))) +
   "&nonce=" + loginInfo["nonce"].(string) +
@@ -155,8 +161,10 @@ func buildParems(su, sp, captcha string, loginInfo map[string]interface{}) strin
   "&sr=1280*800&encoding=UTF-8&prelt=839&url=http%3A%2F%2Fweibo.com%2Fajaxlogin.php%3Fframelogin%3D1%26callback%3Dparent.sinaSSOController.feedBackUrlCallBack&returntype=META"
   //需要验证码
 	if loginInfo["showpin"].(float64) == 1 {
+		strParams += "&pcid=" + loginInfo["pcid"].(string)
 		strParams += "&door=" + captcha
 	}
+	fmt.Println("buildParems " + strParams)
   return strParams
 }
 
@@ -164,8 +172,7 @@ func buildParems(su, sp, captcha string, loginInfo map[string]interface{}) strin
 func callPassport(resp, cookies string) (passresp, passcookies string) {
 
 	//提取passport跳转地址
-	passportUrl := RegexFind(resp, `location.replace\(\"(.*?)\"\)`)
-	fmt.Println("callPassport "+ passportUrl + resp)
+	passportUrl := RegexFind(resp, `location.replace\(\'(.*?)\'\)`)
 	passresp, passcookies = DoRequest(`GET`, passportUrl, ``, cookies, ``, header)
 	return
 }
@@ -175,4 +182,18 @@ func entryHome(redirectUrl, cookies string) (homeResp, homeCookies string) {
   fmt.Println("======entryHome: " + redirectUrl)
 	homeResp, homeCookies = DoRequest(`GET`, redirectUrl, ``, cookies, ``, header)
 	return
+}
+
+//保存验证码
+func saveCaptcha(pcid, cookies string) {
+	rnd := strconv.Itoa(int(time.Now().Unix()))
+	captchUrl := "http://login.sina.com.cn/cgi/pin.php?r=" + rnd + "&s=0&p=" + pcid
+	fmt.Println(captchUrl)
+	captcha, _ := DoRequest(`GET`, captchUrl, ``, cookies, ``, nil)
+	imgSave, err := os.Create("./" + rnd + ".png")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	io.Copy(imgSave, bytes.NewReader([]byte(captcha)))
+	fmt.Println("saveCaptcha")
 }

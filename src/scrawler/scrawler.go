@@ -14,7 +14,7 @@ import (
 func Scrawler(){
   // get login cookies
   cookie := WeiboLogin("username", "passwd")
-  urls, err := ReadLine("./data/mstarturlname.map")
+  urls, err := ReadLine("src/data/mstarturlname.map")
   if err != nil {
     fmt.Println("ReadLine error")
     return
