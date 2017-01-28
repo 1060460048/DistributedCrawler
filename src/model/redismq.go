@@ -48,6 +48,7 @@ func (rmq *RedisMq) GetUrls() (urls []string){
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
   n, _ := redis.Int(c.Do("LLEN", "url"))
 
+  fmt.Printf("urls length: %#v/n", n)
   // if len(urls) < 100 then load data from mongodb
   if n < 100 {
     go loadDataFromMongod()

@@ -11,17 +11,19 @@ type Worker struct {
   addUrlChannel chan bool
 }
 
-func initWorker(addr string, nRPC int) *Worker{
+func initWorker(addr string) *Worker{
   w := &Worker{}
   w.addr = addr
   w.addUrlChannel = make(chan bool)
   return w
 }
 
-func RunWorker(mAddr, wAddr string, nRPC int) {
-  w := initWorker(wAddr, nRPC)
+func RunWorker(mAddr, wAddr string) {
+  fmt.Println("=======RunWorker Begin=======")
+  w := initWorker(wAddr)
   // go startRpcWorker(w)
   register(mAddr, w.addr)
+  fmt.Println("=======RunWorker End=======")
   // for {
   //   select {
   //   case: <- addUrlChannel

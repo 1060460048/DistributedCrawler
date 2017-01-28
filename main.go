@@ -6,29 +6,27 @@ import (
 	//"log"
 	"os"
 	"distribute"
-	"scrawler"
+	// "scrawler"
 	// "segment"
 )
 // Can be run in 3 ways:
-// 1) Scrawler (e.g., go run main.go master x.txt sequential)
-// 2) Master (e.g., go run main.go master x.txt localhost:7777)
-// 3) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
+// 1) Master (e.g., go run main.go master localhost:7777)
+// 2) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
+// 3) Master or Worker (e.g., go run main.go worker sequential)
 func main() {
-  if len(os.Args) != 4 {
-		// segment.Segment()
-		scrawler.Scrawler()
+  if len(os.Args) != 3 {
+		//scrawler.Scrawler()
+		distribute.RunWorker(os.Args[2], os.Args[3])
     fmt.Printf("%s: see usage comments in file\n", os.Args[0])
   } else if os.Args[1] == "master" {
-    if os.Args[3] == "sequential" {
-      //redismq.RunSingle(5, 3, os.Args[2], Map, Reduce)
-    } else {
-      distribute.RunMaster(os.Args[2], os.Args[3])
-      // Wait until MR is done
-      //<- mr.DoneChannel
-    }
-  } else {
-    distribute.RunWorker(os.Args[2], os.Args[3], 100)
-  }
+    distribute.RunMaster(os.Args[2])
+  } else if os.Args[1] == "worker" {
+    distribute.RunWorker(os.Args[2], os.Args[3])
+  } else if os.Args[1] == "sequential" {
+    //redismq.RunSingle(5, 3, os.Args[2], Map, Reduce)
+	} else {
+		//fmt.Printf("%s: see usage comments in file\n", os.Args[0])
+	}
 }
 
 /*type StatisticsServer struct {

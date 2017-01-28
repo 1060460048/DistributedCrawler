@@ -45,7 +45,7 @@ func call(srv string, rpcname string,
 	}
 	defer c.Close()
 
-	err := c.Call(rpcname, args, reply)
+	err = c.Call(rpcname, args, reply)
 	if err == nil {
 		return true
 	}
