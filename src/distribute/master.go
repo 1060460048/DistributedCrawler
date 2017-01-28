@@ -12,15 +12,12 @@ import (
 )
 
 type Master struct {
-  dbname              string
-  //dbstring string
-  Address             string
-  // l               net.Listener
-  // alive           bool
-  registerChannel     chan string
-  workDownChnanel     chan string
-  readUrlsChannel     chan bool
-  urlChannel          chan string
+  addr             string
+  // l                 net.Listener
+  // alive            bool
+  regChan             chan string
+  workDownChan        chan string
+  urlChan             chan string
   workers             map[WorkInfo]bool
   rmq                 *model.RedisMq
 }
@@ -29,20 +26,19 @@ type WorkInfo struct {
   workAddr string
 }
 
-func initMaster(dbname, Address string) (m *Master, err error) {
+func initMaster(addr string) (m *Master, err error) {
   m = &Master{}
-  m.dbname = dbname
-  m.Address = Address
+  m.addr = addr
   // m.alive = true
-  m.registerChannel = make(chan string)
-  m.urlChannel = make(chan string, 100)
+  m.regChan = make(chan string)
+  m.urlChan = make(chan string, 100)
   m.workers = make(map[WorkInfo]bool)
   m.rmq, err = model.InitRedisMq("aaa", 1)
   return m, err
 }
 
-func RunMaster(dbname, mr string) {
-  m, err := initMaster(dbname, mr)
+func RunMaster(addr string) {
+  m, err := initMaster(addr)
   if err != nil {
     fmt.Println("initMaster error: " + err.Error())
     return
@@ -55,18 +51,16 @@ func RunMaster(dbname, mr string) {
   fmt.Println("Master has run: ", mr)
   for {
     select {
-    case workAddr := <-m.registerChannel:
+    case workAddr := <-m.regChan:
       work := WorkInfo{workAddr : workAddr}
       m.workers[work] = true;
       fmt.Println("Register worker: ", work.workAddr)
       go dispatchJob(work, m)
-    case workAddr := <-m.workDownChnanel:
+    case workAddr := <-m.workDownChan:
       work := WorkInfo{workAddr : workAddr}
       m.workers[work] = true;
       fmt.Println("WorkDown worker: ", work.workAddr)
       go dispatchJob(work, m)
-    // case <-m.readUrlsChannel:
-    //   loadUrlsToRedis(m)
     }
   }
 }
@@ -77,7 +71,7 @@ func RunMaster(dbname, mr string) {
 func dispatchJob(workInfo WorkInfo, m *Master) {
   var urls []string
   for i:= 0;i < 10;i++ {
-    url := <- m.urlChannel // get ulr from channel
+    url := <- m.urlChan // get ulr from channel
     urls = append(urls, url)
   }
   m.workers[workInfo] = false;
@@ -100,24 +94,24 @@ func loadUrlsFromRedis(m *Master) {
   for {
     urls := m.rmq.GetUrls()
     for _, v := range urls {
-      m.urlChannel <- v
+      m.urlChan <- v
     }
   }
 }
 
 func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
-   m.registerChannel <- args.Worker
+   m.regChan <- args.Worker
    return nil
 }
 
 /*func (m *Master) JobFinish(args *FinishArgs, res *FinishReply) {
    fmt.Println("Finish worker:%s\n", args.Worker)
-   m.workDownChnanel <- args.Worker
+   m.workDownChan <- args.Worker
 }*/
 
 func startRpcMaster(m *Master) {
   rpc.Register(m)
   rpc.HandleHTTP()
-  err := http.ListenAndServe(m.Address, nil)
+  err := http.ListenAndServe(m.addr, nil)
   fmt.Println("RegistrationServer: accept error", err)
 }

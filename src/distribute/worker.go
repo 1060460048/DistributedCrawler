@@ -7,23 +7,21 @@ import (
 )
 
 type Worker struct {
-  Address string
+  addr string
   addUrlChannel chan bool
 }
 
-func initWorker(Address string, nRPC int) *Worker{
+func initWorker(addr string, nRPC int) *Worker{
   w := &Worker{}
-  // w.nRPC = nRPC
-  w.Address = Address
-  // w.mgosess = dscrawl.InitDB()
+  w.addr = addr
   w.addUrlChannel = make(chan bool)
   return w
 }
 
-func RunWorker(masterAddress, workerAddress string, nRPC int) {
-  w := initWorker(workerAddress, nRPC)
-  go startRpcWorker(w)
-  register(masterAddress, w.Address)
+func RunWorker(mAddr, wAddr string, nRPC int) {
+  w := initWorker(wAddr, nRPC)
+  // go startRpcWorker(w)
+  register(mAddr, w.addr)
   // for {
   //   select {
   //   case: <- addUrlChannel
@@ -33,11 +31,11 @@ func RunWorker(masterAddress, workerAddress string, nRPC int) {
   // defer w.mgo.MgoClient.Close()
 }
 
-func register(masterAddress, workerAddress string) {
+func register(mAddr, wAddr string) {
   args := &RegisterArgs{}
-  args.Worker = workerAddress
+  args.Worker = wAddr
   var reply RegisterReply
-  call(masterAddress, "Master.Register", args, &reply)
+  call(mAddr, "Master.Register", args, &reply)
 }
 
 func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
@@ -45,7 +43,7 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
   switch args.JobType {
   case "Crawl":
     //save your pages and return the next urls
-    //urls := scrawler.DoCrawl(DojobArgs.Url)
+    //urls := scrawler.DoCrawl(DojobArgs.Urls)
     /*
     if urls.length() > 0 {
       addUrlChannel <- true
@@ -55,21 +53,17 @@ func (w *Worker) Dojob(args *DojobArgs, res *DojobReply) error {
   return nil
 }
 
-// func addUrlsToMongodb(w *Worker, urls []string){
-//   w.mgo.InsertUrls(urls)
-// }
-
 func startRpcWorker(w *Worker) {
   //need code reconstruction
   rpc.Register(w)
   rpc.HandleHTTP()
-  err := http.ListenAndServe(w.Address, nil)
+  err := http.ListenAndServe(w.addr, nil)
   fmt.Println("RegistrationServer: accept error", err)
   // rpcs := rpc.NewServer()
   // rpcs.Register(w)
-  // l, e := net.Listen("tcp", w.Address)
+  // l, e := net.Listen("tcp", w.addr)
   // if e != nil {
-	// 	fmt.Println("RunWorker: worker ", w.Address, " error: ", e)
+	// 	fmt.Println("RunWorker: worker ", w.addr, " error: ", e)
 	// }
 	// w.l = l
   //add your code here

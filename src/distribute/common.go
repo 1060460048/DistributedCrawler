@@ -39,8 +39,8 @@ type RegisterReply struct {
 //
 func call(srv string, rpcname string,
 	args interface{}, reply interface{}) bool {
-	c, errx := rpc.DialHTTP("tcp", srv)
-	if errx != nil {
+	c, err := rpc.DialHTTP("tcp", srv)
+	if err != nil {
 		return false
 	}
 	defer c.Close()

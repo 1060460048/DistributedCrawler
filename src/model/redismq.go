@@ -7,37 +7,37 @@ import (
 
 type RedisMq struct {
   RedisClient *redis.Pool
-  RedisHost string
-  RedisDB int
+  redisHost string
+  redisDB int
   C       redis.Conn
 }
 
-func InitRedisMq(RedisHost string, RedisDB int) (*RedisMq, error) {
+func InitRedisMq(redisHost string, redisDB int) (*RedisMq, error) {
   rmq := &RedisMq{
-    RedisHost : RedisHost,
-    RedisDB : RedisDB,
+    redisHost : redisHost,
+    redisDB : redisDB,
   }
   // rmq.RedisClient = &redis.Pool{
   //   MaxIdle:     1,
 	// 	MaxActive:   10,
 	// 	IdleTimeout: 180 * time.Second,
 	// 	Dial: func() (redis.Conn, error) {
-	// 		c, err := redis.Dial("tcp", rmq.RedisHost)
+	// 		c, err := redis.Dial("tcp", rmq.redisHost)
 	// 		if err != nil {
 	// 			return nil, err
 	// 		}
 	// 		// 选择db
-	// 		c.Do("SELECT", rmq.RedisDB)
+	// 		c.Do("SELECT", rmq.redisDB)
 	// 		return c, nil
 	// 	},
   // }
-  c, err := redis.Dial("tcp", ":6379")
+  c, err := redis.Dial("tcp", redisHost)
   if err != nil {
       // handle error
       fmt.Println("redis dial error: " + err.Error())
       return nil, err
   }
-  c.Do("SELECT", rmq.RedisDB)
+  c.Do("SELECT", rmq.redisDB)
   rmq.C = c
   return rmq, nil
 }
