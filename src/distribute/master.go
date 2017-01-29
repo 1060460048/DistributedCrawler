@@ -9,7 +9,7 @@ import (
   //"github.com/mediocregopher/radix.v2/redis"
   // "github.com/garyburd/redigo/redis"
   "model"
-  "time"
+  // "time"
 )
 
 type Master struct {
@@ -32,7 +32,7 @@ func initMaster(addr string) (m *Master, err error) {
   m.addr = addr
   // m.alive = true
   m.regChan = make(chan string)
-  m.urlChan = make(chan string, 100)
+  m.urlChan = make(chan string, 5)
   m.workers = make(map[*WorkInfo]bool)
   m.rmq, err = model.InitRedisMq("127.0.0.1:32770", 1)
   return m, err
@@ -84,7 +84,7 @@ func dispatchJob(workInfo *WorkInfo, m *Master) {
   err := call(workInfo.workAddr, "Worker.Dojob", args, &reply)
   if err == true {
     m.workers[workInfo] = false;
-    fmt.Println("dispatchJob success worker: " + work.workAddr)
+    fmt.Println("dispatchJob success worker: " + workInfo.workAddr)
   }
 }
 
@@ -98,14 +98,12 @@ func loadUrlsFromRedis(m *Master) {
   // every blocked work because of none data in redis
   fmt.Println("loadUrlsFromRedis: begin")
   for {
-    urls := m.rmq.GetUrls()
-    if len(urls) == 0 {
-      fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
-      time.Sleep(60 * time.Second)
-    }
-    for _, v := range urls {
-      m.urlChan <- v
-    }
+    url := m.rmq.GetUrlBlock()
+    // if len(urls) == 0 {
+    //   fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
+    //   time.Sleep(60 * time.Second)
+    // }
+    m.urlChan <- url
   }
 }
 

@@ -17,20 +17,6 @@ func InitRedisMq(redisHost string, redisDB int) (*RedisMq, error) {
     redisHost : redisHost,
     redisDB : redisDB,
   }
-  // rmq.RedisClient = &redis.Pool{
-  //   MaxIdle:     1,
-	// 	MaxActive:   10,
-	// 	IdleTimeout: 180 * time.Second,
-	// 	Dial: func() (redis.Conn, error) {
-	// 		c, err := redis.Dial("tcp", rmq.redisHost)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		// 选择db
-	// 		c.Do("SELECT", rmq.redisDB)
-	// 		return c, nil
-	// 	},
-  // }
   c, err := redis.Dial("tcp", redisHost)
   if err != nil {
       // handle error
@@ -42,22 +28,32 @@ func InitRedisMq(redisHost string, redisDB int) (*RedisMq, error) {
   return rmq, nil
 }
 
-func (rmq *RedisMq) GetUrls() (urls []string){
+func (rmq *RedisMq) GetUrlBlock() (url string) {
+  c := rmq.C
+
+  urls, _ := redis.Strings(c.Do("brpop", "url", "0"))
+  fmt.Println("url: %#v/n", urls)
+
+  return urls[1]
+}
+
+func (rmq *RedisMq) GetUrls() (urls []string) {
   c := rmq.C
   // defer rc.Close()
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
   n, _ := redis.Int(c.Do("LLEN", "url"))
 
-  fmt.Printf("urls length: %#v/n", n)
+  fmt.Println("urls length: %#v/n", n)
   // if len(urls) < 100 then load data from mongodb
   if n < 100 {
     go loadDataFromMongod()
-    urls, _ = redis.Strings(c.Do("lrange", "url", "0", "-1"))
-    for _, url := range urls {
-      fmt.Printf("get urls from redis: " + url)
-    }
   } else {
-    urls, _ = redis.Strings(c.Do("lrange", "url", "0", "100"))
+    n = 100
+  }
+  for ;n > 0; n-- {
+    url, _ := redis.Strings(c.Do("brpop", "url", "0"))
+    fmt.Println("url: %#v/n", url)
+    //urls = append(urls, url)
   }
   return urls
 }
