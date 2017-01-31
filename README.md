@@ -5,8 +5,8 @@
 [![Yii2](https://img.shields.io/badge/PoweredBy-ZjuCx-brightgreen.svg?style=flat)](http://120.27.39.169:8080/home)
 
 ### Introduction
-```
 使用golang开发的[分布式爬虫系统](https://github.com/zjucx/DistributedCrawler.git)，主要分为3个模块:[分布式框架](src/docs/framework.md)、[数据管理](src/docs/model.md)和[爬虫部分](src/docs/scrawler.md)。目录结构如下:
+```
 ├── conf
 │   └── app.conf       ------配置部分，数据库等信息的配置。还未开发。=。=
 ├── model    
