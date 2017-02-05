@@ -49,7 +49,7 @@ for {
 
 #### worker
 ```
-完成master节点分发的任务，与爬虫模块交互。准确说应该是调用爬虫模块。实现注册和workdown借口
+完成master节点分发的任务，与爬虫模块交互。准确说应该是调用爬虫模块。实现注册和workdone接口
 ```
 ### Discussing
 - [submit issue](https://github.com/zjucx/DistributedCrawler/issues/new)
