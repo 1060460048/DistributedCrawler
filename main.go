@@ -22,7 +22,9 @@ func main() {
     distribute.RunMaster(os.Args[2])
   } else if os.Args[1] == "worker" {
     distribute.RunWorker(os.Args[2], os.Args[3])
-  } else if os.Args[1] == "sequential" {
+  } else if os.Args[1] == "single" {
+		//线程数
+		distribute.RunSingle(5)
     //redismq.RunSingle(5, 3, os.Args[2], Map, Reduce)
 	} else {
 		//fmt.Printf("%s: see usage comments in file\n", os.Args[0])

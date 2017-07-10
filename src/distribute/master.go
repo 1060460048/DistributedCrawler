@@ -18,7 +18,7 @@ type Master struct {
   // alive            bool
   regChan             chan string
   workDownChan        chan string
-  urlChan             chan string
+  jobChan             chan string
   workers             map[*WorkInfo]bool
   rmq                 *model.RedisMq
 }
@@ -32,7 +32,7 @@ func initMaster(addr string) (m *Master, err error) {
   m.addr = addr
   // m.alive = true
   m.regChan = make(chan string)
-  m.urlChan = make(chan string, 5)
+  m.jobChan = make(chan string, 5)
   m.workers = make(map[*WorkInfo]bool)
   m.rmq, err = model.InitRedisMq("127.0.0.1:32770", 1)
   return m, err
@@ -73,7 +73,7 @@ func RunMaster(addr string) {
 func dispatchJob(workInfo *WorkInfo, m *Master) {
   var urls []string
   for i:= 0;i < 10;i++ {
-    url := <- m.urlChan // get ulr from channel
+    url := <- m.jobChan // get ulr from channel
     urls = append(urls, url)
   }
   args := &DojobArgs{}
@@ -91,7 +91,7 @@ func dispatchJob(workInfo *WorkInfo, m *Master) {
 /*
  * this function is likely a producter.
  */
-func loadUrlsFromRedis(m *Master) {
+func loadUrlsFromRedis(m interface{}) {
   //1) load Data
   //2) dispatchjob
   // When finish you need dispatchjob for
@@ -103,7 +103,7 @@ func loadUrlsFromRedis(m *Master) {
     //   fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
     //   time.Sleep(60 * time.Second)
     // }
-    m.urlChan <- url
+    m.jobChan <- url
   }
 }
 
