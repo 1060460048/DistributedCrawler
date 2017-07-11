@@ -13,5 +13,5 @@ func Scrawler(url string){
   //  fmt.Println("ReadLine error")
   //  return
   //}
-  Scheduler("cookie", urls)
+  Downloader("cookie", url)
 }
