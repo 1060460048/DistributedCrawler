@@ -54,7 +54,7 @@ func call(srv string, rpcname string,
 	return false
 }
 
-type Pool struct {
+type ThreadPool struct {
     Jobs chan func() error;
     ThreadNumber int;
     JobNumber int;
@@ -64,14 +64,14 @@ type Pool struct {
 }
 
 //初始化
-func (p *Pool) Init(ThreadNumber int,JobNumber int)  {
+func (p *ThreadPool) Init(ThreadNumber int, JobNumber int)  {
     p.ThreadNumber = ThreadNumber;
     p.JobNumber = JobNumber;
     p.Jobs = make(chan func() error, JobNumber);
     p.Result = make(chan error, JobNumber);
 }
 
-func (p *Pool) Start()  {
+func (p *ThreadPool) Start()  {
     //开启 number 个goruntine
     for i:=0;i<p.ThreadNumber;i++ {
         go func() {
@@ -104,15 +104,15 @@ func (p *Pool) Start()  {
 }
 
 //关闭
-func (p *Pool) Stop()  {
+func (p *ThreadPool) Stop()  {
     close(p.Jobs);
     close(p.Result);
 }
 
-func (p *Pool) AddTask(task func() error)  {
+func (p *ThreadPool) AddTask(task func() error)  {
     p.Jobs <- task;
 }
 
-func (p *Pool) SetFinishCallback(fun func())  {
+func (p *ThreadPool) SetFinishCallback(fun func())  {
     p.FinishCallback = fun;
 }
