@@ -3,23 +3,22 @@ package distribute
 import (
   "fmt"
   "scrawler"
+  "model"
 )
 
 type Single struct {
   ThreadNum           int
-  Jobs                chan func() error
-  Result              chan error
   jobChan             chan string
   pool                ThreadPool
+  rmq                 *model.RedisMq
 }
 
 func initSingle(threadNum int, jobNum int) s *Single {
   s = &Single{}
-  s.ThreadNum = threadNum
-  s.Jobs = make(chan func() error, threadNum)
-  s.Result = make(chan error, threadNum)
+  s.JobChan = make(chan string, jobNum)
   s.pool.Init(threadNum, jobNum)
   s.pool.Start()
+  s.rmq, _ = model.InitRedisMq("127.0.0.1:32770", 1)
 }
 
 func RunSingle(threadNum int, jobNum int, startUrl string) {
@@ -40,6 +39,8 @@ func RunSingle(threadNum int, jobNum int, startUrl string) {
       return scrawler(url)
     })
   }
+  s.pool.Stop()
+  s.rmq.C.Close()
 }
 
 func scrawler(url string) error{
