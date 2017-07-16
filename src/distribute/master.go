@@ -9,7 +9,7 @@ import (
   //"github.com/mediocregopher/radix.v2/redis"
   // "github.com/garyburd/redigo/redis"
   "model"
-  // "time"
+  "time"
 )
 
 type Master struct {
@@ -39,7 +39,7 @@ func initMaster(addr string) (m *Master, err error) {
 }
 
 func RunMaster(addr string) {
-  fmt.Println("=======RunMaster Begin=======")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go RunMaster start")
   m, err := initMaster(addr)
   if err != nil {
     fmt.Println("initMaster error: " + err.Error())
@@ -48,7 +48,7 @@ func RunMaster(addr string) {
   defer m.rmq.C.Close()
 
   go startRpcMaster(m)
-  go loadUrlsFromRedis(m)
+  go loadUrlsFromRedis(m.rmq, m.jobChan)
   // go RunRedisMq(dbname, 0)
   fmt.Println("=======RunMaster End=======")
   for {
@@ -88,24 +88,6 @@ func dispatchJob(workInfo *WorkInfo, m *Master) {
   }
 }
 
-/*
- * this function is likely a producter.
- */
-func loadUrlsFromRedis(m interface{}) {
-  //1) load Data
-  //2) dispatchjob
-  // When finish you need dispatchjob for
-  // every blocked work because of none data in redis
-  fmt.Println("loadUrlsFromRedis: begin")
-  for {
-    url := m.rmq.GetUrlBlock()
-    // if len(urls) == 0 {
-    //   fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
-    //   time.Sleep(60 * time.Second)
-    // }
-    m.jobChan <- url
-  }
-}
 
 func (m *Master) Register(args *RegisterArgs, res *RegisterReply) error {
    m.regChan <- args.Worker

@@ -14,20 +14,24 @@ import (
 // 2) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
 // 3) Master or Worker (e.g., go run main.go worker sequential)
 func main() {
-  if len(os.Args) != 3 {
-		//scrawler.Scrawler()
-		distribute.RunWorker(os.Args[2], os.Args[3])
-    fmt.Printf("%s: see usage comments in file\n", os.Args[0])
-  } else if os.Args[1] == "master" {
-    distribute.RunMaster(os.Args[2])
-  } else if os.Args[1] == "worker" {
-    distribute.RunWorker(os.Args[2], os.Args[3])
-  } else if os.Args[1] == "single" {
-		//线程数
-		distribute.RunSingle(5, 5, "www.baidu.com")
-    //redismq.RunSingle(5, 3, os.Args[2], Map, Reduce)
-	} else {
-		//fmt.Printf("%s: see usage comments in file\n", os.Args[0])
+	if len(os.Args) < 1 {
+		fmt.Printf("%s: see usage comments in file\n", os.Args[0])
+	}
+	switch os.Args[1] {
+	case "master":
+		if len(os.Args) == 3 {
+			distribute.RunMaster(os.Args[2])
+		}
+	case "worker":
+		if len(os.Args) == 4 {
+			distribute.RunWorker(os.Args[2], os.Args[3])
+		}
+	case "single":
+		if len(os.Args) == 5 {
+			distribute.RunSingle(5, 5, "http://www.baidu.com")
+		} else {
+			fmt.Printf("%s: see usage comments in file %d\n", os.Args[0], len(os.Args))
+		}
 	}
 }
 

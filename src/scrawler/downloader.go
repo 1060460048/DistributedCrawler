@@ -6,11 +6,12 @@ package scrawler
 
 import (
    "fmt"
+   "time"
 )
 
 func Downloader(cookie, url string) {
   resp, _ := DoRequest(`GET`, url, ``, cookie, ``, header)
-  fmt.Printf("Downloader finish url:" + url)
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Downloader begin url: " + url)
   Spider(resp)
   //return resp
 }

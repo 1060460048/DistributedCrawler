@@ -2,6 +2,8 @@ package distribute
 
 import (
   "fmt"
+  "time"
+  // "errors"
   "scrawler"
   "model"
 )
@@ -13,37 +15,40 @@ type Single struct {
   rmq                 *model.RedisMq
 }
 
-func initSingle(threadNum int, jobNum int) s *Single {
+func initSingle(threadNum int, jobNum int) (s *Single) {
+  rmq, err := model.InitRedisMq("127.0.0.1:6379", 1)
+  if err != nil {
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go initSingle error" + err.Error())
+    return nil
+  }
   s = &Single{}
-  s.JobChan = make(chan string, jobNum)
+  s.jobChan = make(chan string, jobNum)
   s.pool.Init(threadNum, jobNum)
-  s.pool.Start()
-  s.rmq, _ = model.InitRedisMq("127.0.0.1:32770", 1)
+  go s.pool.Start()
+  s.rmq = rmq
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go initSingle success")
+  return s
 }
 
 func RunSingle(threadNum int, jobNum int, startUrl string) {
-  fmt.Println("=======RunMaster Begin=======")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go RunSingle start")
 
-  s = initSingle(threadNum, jobNum)
+  s := initSingle(threadNum, jobNum)
 
-  go loadUrlsFromRedis(s)
+  go loadUrlsFromRedis(s.rmq, s.jobChan)
 
-  scrawler(startUrl)
+  scrawler.Scrawler(startUrl)
 
   for {
     url,ok := <-s.jobChan
     if !ok {
         break;
     }
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go RunSingle add task")
     s.pool.AddTask(func () error {
-      return scrawler(url)
+      return scrawler.Scrawler(url)
     })
   }
   s.pool.Stop()
   s.rmq.C.Close()
-}
-
-func scrawler(url string) error{
-  scrawler(url)
-  return nil
 }

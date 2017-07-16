@@ -6,7 +6,8 @@
 package scrawler
 
 import (
-  // "fmt"
+  "fmt"
+  "time"
   "regexp"
   // "strings"
   "model"
@@ -14,6 +15,8 @@ import (
 
 func Spider(resp string) {
   //your code your reg you extraction rules and so on
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Spider resp: " + resp)
+
   urls := extractUrls(resp)
   item := extractItems(resp)
 

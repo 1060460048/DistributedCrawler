@@ -7,23 +7,21 @@ package scrawler
 
 import (
   "fmt"
+  "time"
   "model"
 )
 
-
-// type Item struct {
-//   name string
-//   sex  string
-//   habbit []string
-//   //define by yourself...
-// }
-
 func Pipeline(urls []string, items *model.Item) {
 
-  mgo := model.InitMgoDB("localhost", "urls")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Pipeline begin ")
+  for _, url := range urls {
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Pipeline begin url: " + url)
+  }
+
+  mgo := model.InitMgoDB("localhost:27017", "urls")
   defer mgo.Session.Close()
   mgo.InsertUrls(urls)
 
-  fmt.Printf("Pipeline======")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Pipeline end ")
   //write urls and your data to mongodb and send finish signal to master
 }

@@ -2,6 +2,7 @@ package model
 
 import (
   "fmt"
+  "time"
   "gopkg.in/mgo.v2"
   "gopkg.in/mgo.v2/bson"
 )
@@ -33,7 +34,7 @@ func InitMgoDB(ConnStr, DBName string) *Mgo {
   }
   session, err := mgo.Dial(ConnStr)
   if err != nil {
-    panic(err)
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InitMgoDB error: " + err.Error())
   }
   //defer session.Close()
 
@@ -49,11 +50,12 @@ func InitMgoDB(ConnStr, DBName string) *Mgo {
    Background: true,             // 后台创建索引
   }
   if err := c.EnsureIndex(index); err != nil {
-     fmt.Println(err)
+     fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InitMgoDB error: " + err.Error())
      return nil
   }
   mgoClient.DB = session.DB(DBName)
   mgoClient.Session = session
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InitMgoDB success")
   return mgoClient
 }
 
