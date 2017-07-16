@@ -11,17 +11,18 @@ import (
   "model"
 )
 
-func Pipeline(urls []string, items *model.Item) {
+func Pipeline(urls []string, items []model.Item) {
 
-  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Pipeline begin ")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " pipeline.go Pipeline begin ")
   for _, url := range urls {
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Pipeline begin url: " + url)
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " pipeline.go Pipeline begin url: " + url)
   }
 
   mgo := model.InitMgoDB("localhost:27017", "urls")
   defer mgo.Session.Close()
   mgo.InsertUrls(urls)
+  mgo.InsertItems(items)
 
-  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Pipeline end ")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " pipeline.go Pipeline end ")
   //write urls and your data to mongodb and send finish signal to master
 }

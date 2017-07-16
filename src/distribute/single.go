@@ -35,7 +35,7 @@ func RunSingle(threadNum int, jobNum int, startUrl string) {
 
   s := initSingle(threadNum, jobNum)
 
-  go loadUrlsFromRedis(s.rmq, s.jobChan)
+  go s.rmq.LoadUrlsFromRedis(s.jobChan)
 
   scrawler.Scrawler(startUrl)
 

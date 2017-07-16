@@ -20,10 +20,12 @@ type Url struct {
 }
 
 type Item struct {
-  id              bson.ObjectId `bson:"_id"`
-  name            string        `bson:"name"`
-  sex             string        `bson:"sex"`
-  habbit          []string      `bson:"habbit"`
+  Id              bson.ObjectId `bson:"_id"`
+  Votes           int           `bson:"votes"`
+  Answers         int           `bson:"answers"`
+  Views           int           `bson:"views"`
+  Url             string        `bson:"url"`
+  Question        string        `bson:"question"`
   //define by yourself...
 }
 
@@ -53,6 +55,20 @@ func InitMgoDB(ConnStr, DBName string) *Mgo {
      fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InitMgoDB error: " + err.Error())
      return nil
   }
+
+  c2 := session.DB(DBName).C("questions")
+  // 创建索引
+  index2 := mgo.Index{
+   Key:        []string{"question"}, // 索引字段， 默认升序,若需降序在字段前加-
+   Unique:     true,             // 唯一索引 同mysql唯一索引
+   DropDups:   true,             // 索引重复替换旧文档,Unique为true时失效
+   Background: true,             // 后台创建索引
+  }
+  if err := c2.EnsureIndex(index2); err != nil {
+     fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InitMgoDB error: " + err.Error())
+     return nil
+  }
+
   mgoClient.DB = session.DB(DBName)
   mgoClient.Session = session
   fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InitMgoDB success")
@@ -72,9 +88,31 @@ func (mgo *Mgo)InsertUrls(urls []string) (err error) {
     }
     err = c.Insert(tmp)
     if err != nil {
-      fmt.Println("insert error"+ err.Error())
+      fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertUrls error: " + err.Error())
       break
     }
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertUrls success url: " + url)
+  }
+  return err
+}
+
+func (mgo *Mgo)InsertItems(items []Item) (err error) {
+  c := mgo.DB.C("questions")
+  for _, item := range items {
+    tmp := &Item{
+      Id : bson.NewObjectId(),
+      Votes : item.Votes,
+      Answers : item.Answers,
+      Views : item.Views,
+      Url : item.Url,
+      Question : item.Question,
+    }
+    err = c.Insert(tmp)
+    if err != nil {
+      fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertItems error: " + err.Error())
+      break
+    }
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertItems success")
   }
   return err
 }

@@ -48,7 +48,7 @@ func RunMaster(addr string) {
   defer m.rmq.C.Close()
 
   go startRpcMaster(m)
-  go loadUrlsFromRedis(m.rmq, m.jobChan)
+  go m.rmq.LoadUrlsFromRedis(m.jobChan)
   // go RunRedisMq(dbname, 0)
   fmt.Println("=======RunMaster End=======")
   for {

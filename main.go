@@ -5,6 +5,7 @@ import (
 	//"net/http"
 	//"log"
 	"os"
+	"strconv"
 	"distribute"
 	// "scrawler"
 	// "segment"
@@ -28,7 +29,12 @@ func main() {
 		}
 	case "single":
 		if len(os.Args) == 5 {
-			distribute.RunSingle(5, 5, "http://www.baidu.com")
+			threadNum, err1 := strconv.Atoi(os.Args[2])
+			jobNum, err2 := strconv.Atoi(os.Args[3])
+			if err1 != nil || err2 != nil {
+				fmt.Printf("%s: see usage comments in file %d\n", os.Args[0], len(os.Args))
+			}
+			distribute.RunSingle(threadNum, jobNum, os.Args[4])
 		} else {
 			fmt.Printf("%s: see usage comments in file %d\n", os.Args[0], len(os.Args))
 		}

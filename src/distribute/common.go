@@ -5,7 +5,7 @@ import (
 	"time"
 	"strconv"
 	"net/rpc"
-	"model"
+	// "model"
 )
 
 type DojobArgs struct {
@@ -26,26 +26,6 @@ type RegisterReply struct {
 	OK 				bool
 }
 
-
-/*
- * this function is likely a producter.
- */
-func loadUrlsFromRedis(rmq *model.RedisMq, jobChan chan string) {
-  //1) load Data
-  //2) dispatchjob
-  // When finish you need dispatchjob for
-  // every blocked work because of none data in redis
-  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " common.go loadUrlsFromRedis begin")
-  for {
-    url := rmq.GetUrlBlock()
-    // if len(urls) == 0 {
-    //   fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
-    //   time.Sleep(60 * time.Second)
-    // }
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " common.go loadUrlsFromRedis add " + url + " to jobChan")
-    jobChan <- url
-  }
-}
 //
 // call() sends an RPC to the rpcname handler on server srv
 // with arguments args, waits for the reply, and leaves the
