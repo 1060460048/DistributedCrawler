@@ -117,11 +117,18 @@ func (mgo *Mgo)InsertItems(items []Item) (err error) {
   return err
 }
 
-func (mgo *Mgo)QueryUrls(topN int) (error, []Url){
+func (mgo *Mgo)QueryUrls(topN int) ([]Url, error){
   //*****查询多条数据*******
   var urls []Url   //存放结果
   c := mgo.DB.C("urls")
   iter := c.Find(nil).Limit(topN).Iter()
   err := iter.All(&urls)
-  return err, urls
+  return urls, err
+}
+
+func (mgo *Mgo)DeleteUrl(url Url) (error){
+  c := mgo.DB.C("urls")
+  c.Remove(bson.M{"url": url.Url})
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go DeleteUrl url: " + url.Url)
+  return nil
 }

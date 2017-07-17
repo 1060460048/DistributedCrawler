@@ -21,7 +21,7 @@ func Spider(resp string) {
   // 去除换行符
   resp = strings.Replace(resp, "\n", "", -1)
 
-  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " spiders.go Spider resp: " + resp)
+  // fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " spiders.go Spider resp: " + resp)
 
   urls := extractUrls(resp)
   item := extractItems(resp)
@@ -59,7 +59,7 @@ func extractItems(resp string) []model.Item{
       item.Url = arrStr[i][6]
       item.Question = arrStr[i][9]
       items = append(items, item)
-      fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " spiders.go extractUrls url: "+ arrStr[i][1] + arrStr[i][3] + arrStr[i][6] +arrStr[i][8] + arrStr[i][9])
+      // fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " spiders.go extractUrls url: "+ arrStr[i][1] + arrStr[i][3] + arrStr[i][6] +arrStr[i][8] + arrStr[i][9])
     }
   }
   return items

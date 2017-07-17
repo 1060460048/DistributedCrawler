@@ -50,5 +50,6 @@ func RunSingle(threadNum int, jobNum int, startUrl string) {
     })
   }
   s.pool.Stop()
+  s.rmq.Mgo.Session.Close()
   s.rmq.C.Close()
 }
