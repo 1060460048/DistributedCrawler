@@ -112,8 +112,9 @@ func (mgo *Mgo)InsertItems(items []Item) (err error) {
       fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertItems error: " + err.Error())
       break
     }
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertItems success")
   }
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go InsertItems success")
+
   return err
 }
 
@@ -123,6 +124,7 @@ func (mgo *Mgo)QueryUrls(topN int) ([]Url, error){
   c := mgo.DB.C("urls")
   iter := c.Find(nil).Limit(topN).Iter()
   err := iter.All(&urls)
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " mongodb.go QueryUrls ")
   return urls, err
 }
 

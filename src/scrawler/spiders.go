@@ -37,9 +37,11 @@ func extractUrls(resp string) []string{
   arrStr := reg.FindAllStringSubmatch(resp, -1)
   if len(arrStr) > 0 {
     for i := 0; i < len(arrStr); i++ {
-      str = append(str, arrStr[i][1])
+      str = append(str, "https://segmentfault.com" + arrStr[i][1])
       fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " spiders.go extractUrls url: " + arrStr[0][1])
     }
+  } else {
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " spiders.go no url to extract")
   }
   return str
 }

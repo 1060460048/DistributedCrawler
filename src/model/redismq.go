@@ -28,6 +28,7 @@ func InitRedisMq(redisHost string, redisDB int) (*RedisMq, error) {
   c.Do("SELECT", rmq.redisDB)
   rmq.C = c
   rmq.Mgo = InitMgoDB("localhost:27017", "urls")
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go InitRedisMq success ")
   return rmq, nil
 }
 
@@ -41,17 +42,23 @@ func (rmq *RedisMq) LoadUrlsFromRedis(jobChan chan string) {
   // every blocked work because of none data in redis
   fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadUrlsFromRedis begin")
   for {
-    urls := rmq.GetUrls()
-    // if len(urls) == 0 {
-    //   fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
-    //   time.Sleep(60 * time.Second)
-    // }
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadUrlsFromRedis add " + urls[1] + " to jobChan")
-    jobChan <- urls[1]
+      select {
+      case <-time.After(time.Second * time.Duration(2)):
+        fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go LoadUrlsFromRedis select")
+        go rmq.GetUrls(jobChan)
+        // urls := rmq.GetUrls(jobChan)
+        // if len(urls) == 0 {
+        //   fmt.Println("loadUrlsFromRedis urls is nil sleep 60s")
+        //   time.Sleep(60 * time.Second)
+        // }
+        // fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadUrlsFromRedis add " + urls[1] + " to jobChan")
+        // jobChan <- urls[1]
+      }
   }
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadUrlsFromRedis end")
 }
 
-func (rmq *RedisMq) GetUrls() (urls []string) {
+func (rmq *RedisMq) GetUrls(jobChan chan string) {
   c := rmq.C
   // defer rc.Close()
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
@@ -62,19 +69,27 @@ func (rmq *RedisMq) GetUrls() (urls []string) {
   if n < 100 {
     rmq.loadDataFromMongod(100-n)
   }
-  urls, _ = redis.Strings(c.Do("brpop", "url", "0"))
-  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go GetUrls url: " + urls[1])
-  return urls
+  url, err := redis.String(c.Do("rpop", "url"))
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go GetUrls url: " + url)
+
+  if err != nil {
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go GetUrls url error: " + err.Error())
+    return
+  }
+  jobChan <- url
+  // return urls
 }
 
-func (rmq *RedisMq) PushUrls(urls []Url) {
-  // rc := rmq.RedisClient.Get()
-  rc := rmq.C
-  // defer rc.Close()
-  //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
+func (rmq *RedisMq) loadDataFromMongod(n int) {
+  //1) queru 1000 urls from mongodb
+  //2) push urls to redismq
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadDataFromMongod begin")
+  urls, _:= rmq.Mgo.QueryUrls(n)
   for _, url := range urls {
-    rc.Do("lpush", "url", url.Url)
+    rmq.PushUrl(url)
+    rmq.Mgo.DeleteUrl(url)
   }
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadDataFromMongod end")
 }
 
 func (rmq *RedisMq) PushUrl(url Url) {
@@ -84,15 +99,4 @@ func (rmq *RedisMq) PushUrl(url Url) {
   //values, _ := redis.Values(rc.Do("lrange", "redlist", "0", "100")))
   rc.Do("lpush", "url", url.Url)
   fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go PushUrl url: " + url.Url)
-}
-
-func (rmq *RedisMq) loadDataFromMongod(n int) {
-  //1) queru 1000 urls from mongodb
-  //2) push urls to redismq
-  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " redismq.go loadDataFromMongod ")
-  urls, _:= rmq.Mgo.QueryUrls(n)
-  for _, url := range urls {
-    rmq.PushUrl(url)
-    rmq.Mgo.DeleteUrl(url)
-  }
 }

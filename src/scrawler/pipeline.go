@@ -14,9 +14,6 @@ import (
 func Pipeline(urls []string, items []model.Item) {
 
   fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " pipeline.go Pipeline begin ")
-  for _, url := range urls {
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " pipeline.go Pipeline begin url: " + url)
-  }
 
   mgo := model.InitMgoDB("localhost:27017", "urls")
   defer mgo.Session.Close()

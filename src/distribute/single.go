@@ -40,14 +40,15 @@ func RunSingle(threadNum int, jobNum int, startUrl string) {
   scrawler.Scrawler(startUrl)
 
   for {
-    url,ok := <-s.jobChan
+    url, ok := <-s.jobChan
     if !ok {
         break;
     }
-    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go RunSingle add task")
-    s.pool.AddTask(func () error {
-      return scrawler.Scrawler(url)
-    })
+    fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " single.go RunSingle add task url: " + url)
+    scrawler.Scrawler(url)
+    // s.pool.AddTask(func () error {
+    //   return scrawler.Scrawler(url)
+    // })
   }
   s.pool.Stop()
   s.rmq.Mgo.Session.Close()

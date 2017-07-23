@@ -28,13 +28,14 @@ func (p *ThreadPool) Start()  {
     for i:=0;i<p.ThreadNumber;i++ {
         go func() {
             for {
-                task,ok := <-p.Jobs
+                task, ok := <-p.Jobs
+								fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " threadpool.go ThreadPool thread#" + strconv.Itoa(i) + "run task")
                 if !ok {
+										fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " threadpool.go ThreadPool get jobs error")
                     break;
                 }
                 err := task();
                 p.Result <- err;
-								fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " common.go ThreadPool thread#" + strconv.Itoa(i) + "run task")
             }
         }();
     }

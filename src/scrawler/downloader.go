@@ -10,8 +10,10 @@ import (
 )
 
 func Downloader(cookie, url string) {
-  resp, _ := DoRequest(`GET`, url, ``, cookie, ``, header)
   fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Downloader begin url: " + url)
+  resp, _ := DoRequest(`GET`, url, ``, cookie, ``, header)
+  fmt.Println(time.Now().Format("2006-01-02 15:04:05") + " scrawler.go Downloader end")
+
   Spider(resp)
   //return resp
 }
