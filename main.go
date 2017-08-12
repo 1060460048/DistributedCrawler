@@ -9,14 +9,22 @@ import (
 	"distribute"
 	// "scrawler"
 	// "segment"
+	"unsafe"
 )
 // Can be run in 3 ways:
 // 1) Master (e.g., go run main.go master localhost:7777)
 // 2) Worker (e.g., go run main.go worker localhost:7777 localhost:7778 &)
 // 3) Master or Worker (e.g., go run main.go worker sequential)
 func main() {
-	if len(os.Args) < 1 {
-		fmt.Printf("%s: see usage comments in file\n", os.Args[0])
+	if len(os.Args) < 2 {
+		sz := 100
+		p := make([]int, sz)
+		p[2] = 5
+		// INVALID: end points outside allocated space.
+		// b := make([]byte, n)
+		// end = unsafe.Pointer(uintptr(unsafe.Pointer(&b[0])) + uintptr(n))
+		fmt.Printf("%s: see usage comments in file %d\n", os.Args[0], *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(&p[0])) + 2*unsafe.Sizeof(p[0]))))
+		return
 	}
 	switch os.Args[1] {
 	case "master":
